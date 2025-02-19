@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MiniSceneEditor;
 
@@ -31,6 +32,8 @@ public class Editor : Game
 	private Camera _camera;
 	private SceneObject _selectedObject;
 
+	private Scene _currentScene;
+	private string _sceneName = "noname";
 
 	public Editor()
 	{
@@ -61,6 +64,19 @@ public class Editor : Game
 
 		_imGuiRenderer = new ImGuiRenderer(this);
 		_camera = new Camera(GraphicsDevice);
+		//_camera.Position = new Vector3(0, 10, -20);
+		_camera.LookAt(Vector3.Zero);
+		_currentScene = new Scene(GraphicsDevice);
+
+		// Додаємо тестові об'єкти (потім це буде завантаження з файлу)
+		var testObject = new SceneObject("Test Object");
+		_currentScene.RegisterObject(testObject);
+
+		var childObject = new SceneObject("Child Object");
+		testObject.AddChild(childObject);
+
+		var subChildObject = new SceneObject("Sub Child");
+		childObject.AddChild(subChildObject);
 
 		CreateGrid();
 		CreateLightSource();
@@ -99,6 +115,12 @@ public class Editor : Game
 		DrawGrid(view, projection);
 
 		DrawLightObject(view, projection);
+		// Рендеримо сцену використовуючи камеру редактора
+		_currentScene.Draw(view, projection);
+		//foreach (var obj in _sceneObjects)
+		//{
+		//	obj.Render(view, projection);
+		//}
 
 		_imGuiRenderer.BeginLayout(gameTime);
 
@@ -159,7 +181,8 @@ public class Editor : Game
 			ImGuiWindowFlags.NoMove |
 			ImGuiWindowFlags.NoResize);
 
-		DrawSceneHierarchy(_sceneObjects);
+		
+
 
 		//if (ImGui.BeginPopupContextWindow())
 		//{
@@ -172,6 +195,17 @@ public class Editor : Game
 
 		ImGui.End();
 
+
+		DrawSceneHierarchy();
+
+		// Відображення властивостей вибраного об'єкта
+		if (_selectedObject != null)
+		{
+			//DrawObjectProperties();
+		}
+
+
+
 		_imGuiRenderer.EndLayout();
 
 		base.Draw(gameTime);
@@ -179,146 +213,151 @@ public class Editor : Game
 
 	protected override void UnloadContent()
 	{
+		foreach (var obj in _sceneObjects)
+		{
+			obj.Dispose();
+		}
 		_imGuiRenderer.Dispose();
 		base.UnloadContent();
 	}
 
-	private unsafe void DrawSceneHierarchy(List<SceneObject> objects, int depth = 0)
+	private void DrawSceneHierarchy()
 	{
-		foreach (var obj in objects)
+		ImGui.Begin($"Scene Hierarchy - {_sceneName}");
+
+		// Отримуємо всі кореневі об'єкти
+		foreach (var obj in _currentScene.GetRootObjects())
 		{
-			ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags.OpenOnArrow |
-									 ImGuiTreeNodeFlags.OpenOnDoubleClick |
-									 ImGuiTreeNodeFlags.SpanAvailWidth;
+			DrawSceneObject(obj);
+		}
 
-			if (obj.IsSelected)
-				flags |= ImGuiTreeNodeFlags.Selected;
-
-			if (obj.Children.Count == 0)
-				flags |= ImGuiTreeNodeFlags.Leaf;
-
-			// Додаємо відступ для вкладених елементів
-			if (depth > 0)
-				ImGui.Indent(depth * 10);
-
-			bool isOpen = ImGui.TreeNodeEx($"{obj.Name}###{obj.GetHashCode()}", flags);
-
-			// Обробка виділення об'єкта
-			if (ImGui.IsItemClicked(ImGuiMouseButton.Left))
+		// Контекстне меню для сцени (правий клік на пустому місці)
+		if (ImGui.BeginPopupContextWindow())
+		{
+			if (ImGui.MenuItem("Add Empty Object"))
 			{
-				// Знімаємо виділення з усіх об'єктів
-				ClearSelection(_sceneObjects);
-				obj.IsSelected = true;
-				_selectedObject = obj;
+				var newObject = new SceneObject($"New Object {_currentScene.GetRootObjects().Count()}");
+				_currentScene.RegisterObject(newObject);
+			}
+			ImGui.EndPopup();
+		}
+
+		ImGui.End();
+	}
+
+	private unsafe void DrawSceneObject(SceneObject obj)
+	{
+		// Налаштування прапорців для вузла дерева
+		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags.OpenOnArrow |
+								 ImGuiTreeNodeFlags.OpenOnDoubleClick |
+								 ImGuiTreeNodeFlags.SpanAvailWidth;
+
+		// Додаємо прапорець Selected, якщо об'єкт вибраний
+		if (obj == _selectedObject)
+			flags |= ImGuiTreeNodeFlags.Selected;
+
+		// Якщо об'єкт не має дочірніх елементів, робимо його листком
+		if (obj.Children.Count == 0)
+			flags |= ImGuiTreeNodeFlags.Leaf;
+
+		// Системні об'єкти (камера, світло) виділяємо іншим кольором
+		if (obj == _currentScene.MainCamera || obj == _currentScene.DirectionalLight)
+		{
+			ImGui.PushStyleColor(ImGuiCol.Text, new System.Numerics.Vector4(0.5f, 0.8f, 1.0f, 1.0f));
+		}
+
+		// Відображаємо вузол дерева
+		bool isOpen = ImGui.TreeNodeEx($"{obj.Name}###{obj.Id}", flags);
+
+		// Повертаємо колір тексту до стандартного
+		if (obj == _currentScene.MainCamera || obj == _currentScene.DirectionalLight)
+		{
+			ImGui.PopStyleColor();
+		}
+
+		// Обробка кліку на об'єкті
+		if (ImGui.IsItemClicked())
+		{
+			_selectedObject = obj;
+		}
+
+		// Контекстне меню для об'єкта (правий клік)
+		if (ImGui.BeginPopupContextItem())
+		{
+			if (ImGui.MenuItem("Add Child"))
+			{
+				var newChild = new SceneObject($"New Child {obj.Children.Count}");
+				_currentScene.RegisterObject(newChild);
+				obj.AddChild(newChild);
 			}
 
-			// Обробка подвійного кліку для фокусування камери
-			if (ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(0))
+			if (ImGui.MenuItem("Delete") &&
+				obj != _currentScene.MainCamera &&
+				obj != _currentScene.DirectionalLight)
 			{
-				_camera.LookAt(obj.Position);
-			}
+				if (_selectedObject == obj)
+					_selectedObject = null;
 
-			// Контекстне меню для об'єкта
-			if (ImGui.BeginPopupContextItem())
-			{
-				if (ImGui.MenuItem("Add Child"))
-				{
-					var newPosition = obj.Position + Vector3.One; // Зміщення для нового об'єкта
-					var newObject = new SceneObject($"Child {obj.Children.Count}", newPosition);
-					obj.Children.Add(newObject);
-				}
-
-				if (ImGui.MenuItem("Delete"))
-				{
-					if (_selectedObject == obj)
-						_selectedObject = null;
-					DeleteObject(obj);
-				}
-
-				if (ImGui.MenuItem("Rename"))
-				{
-					obj.IsRenaming = true;
-				}
-
-				if (ImGui.MenuItem("Focus Camera"))
-				{
-					_camera.LookAt(obj.Position);
-				}
-
-				// Додаткові операції в контекстному меню
-				if (ImGui.BeginMenu("Transform"))
-				{
-					if (ImGui.MenuItem("Reset Position"))
-					{
-						obj.Position = Vector3.Zero;
-					}
-					if (ImGui.MenuItem("Move to Camera"))
-					{
-						obj.Position = _camera.Position + Vector3.Forward;
-					}
-					ImGui.EndMenu();
-				}
-
+				_currentScene.UnregisterObject(obj.Id);
 				ImGui.EndPopup();
+				if (isOpen)
+					ImGui.TreePop();
+				return;
 			}
 
-			// Drag and Drop операції
-			if (ImGui.BeginDragDropSource())
+			if (ImGui.MenuItem("Rename"))
 			{
-				ImGui.SetDragDropPayload("SCENE_OBJECT", IntPtr.Zero, 0);
-				ImGui.Text($"Moving {obj.Name}");
-				_draggedObject = obj;
-				ImGui.EndDragDropSource();
+				// TODO: Додати логіку перейменування
 			}
 
-			if (ImGui.BeginDragDropTarget())
-			{
-				var payload = ImGui.AcceptDragDropPayload("SCENE_OBJECT");
-				if (payload.NativePtr != null && _draggedObject != null)
-				{
-					// Переміщення об'єкта в нову позицію в ієрархії
-					if (_draggedObject != obj && !IsParentOf(_draggedObject, obj))
-					{
-						RemoveObjectFromParent(_draggedObject);
-						obj.Children.Add(_draggedObject);
-					}
-				}
-				ImGui.EndDragDropTarget();
-			}
+			ImGui.EndPopup();
+		}
 
-			// Режим перейменування
-			if (obj.IsRenaming)
-			{
-				ImGui.SameLine();
-				var rename = obj.Name;
-				if (ImGui.InputText("##Rename", ref rename, 100,
-					ImGuiInputTextFlags.EnterReturnsTrue |
-					ImGuiInputTextFlags.AutoSelectAll))
-				{
-					obj.Name = rename;
-					obj.IsRenaming = false;
-				}
+		// Підтримка Drag & Drop
+		if (ImGui.BeginDragDropSource())
+		{
+			ImGui.SetDragDropPayload("SCENE_OBJECT", IntPtr.Zero, 0);
+			ImGui.Text($"Moving {obj.Name}");
+			_draggedObject = obj;
+			ImGui.EndDragDropSource();
+		}
 
-				// Завершення перейменування при втраті фокусу
-				if (!ImGui.IsItemFocused() && obj.IsRenaming)
+		if (ImGui.BeginDragDropTarget())
+		{
+			var payload = ImGui.AcceptDragDropPayload("SCENE_OBJECT");
+			if (payload.NativePtr != null && _draggedObject != null)
+			{
+				if (_draggedObject != obj && !IsChildOf(_draggedObject, obj))
 				{
-					obj.IsRenaming = false;
+					_draggedObject.SetParent(obj);
 				}
 			}
+			ImGui.EndDragDropTarget();
+		}
 
-			if (isOpen)
+		// Якщо вузол відкритий, рекурсивно відображаємо дочірні елементи
+		if (isOpen)
+		{
+			foreach (var child in obj.Children)
 			{
-				if (obj.Children.Count > 0)
-				{
-					DrawSceneHierarchy(obj.Children, depth + 1);
-				}
-				ImGui.TreePop();
+				DrawSceneObject(child);
 			}
-
-			if (depth > 0)
-				ImGui.Unindent(depth * 10);
+			ImGui.TreePop();
 		}
 	}
+
+	private bool IsChildOf(SceneObject parent, SceneObject potentialChild)
+	{
+		var current = potentialChild;
+		while (current.Parent != null)
+		{
+			if (current.Parent == parent)
+				return true;
+			current = current.Parent;
+		}
+		return false;
+	}
+
 
 	// Допоміжні методи
 	private void ClearSelection(List<SceneObject> objects)

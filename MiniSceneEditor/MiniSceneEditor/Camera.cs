@@ -9,6 +9,7 @@ public class Camera
 	private Vector3 _target;
 	private bool _isLookingAtTarget;
 	private float _smoothLookSpeed = 5f;
+	private readonly GraphicsDevice _graphicsDevice;
 
 	public Vector3 Position
 	{
@@ -36,6 +37,7 @@ public class Camera
 		NearPlane = 0.1f;
 		FarPlane = 100f;
 		_isLookingAtTarget = false;
+		_graphicsDevice = graphicsDevice;
 	}
 
 	public void LookAt(Vector3 target)
@@ -75,12 +77,20 @@ public class Camera
 
 	public Matrix GetViewMatrix()
 	{
-		Matrix rotation = Matrix.CreateRotationX(_rotation.X) *
-						 Matrix.CreateRotationY(_rotation.Y) *
-						 Matrix.CreateRotationZ(_rotation.Z);
+		Vector3 forward = Vector3.Transform(Vector3.Forward,
+			Matrix.CreateRotationX(_rotation.X) *
+			Matrix.CreateRotationY(_rotation.Y) *
+			Matrix.CreateRotationZ(_rotation.Z));
 
-		Vector3 forward = Vector3.Transform(Vector3.Forward, rotation);
-		return Matrix.CreateLookAt(_position, _position + forward, Vector3.Up);
+		Vector3 up = Vector3.Transform(Vector3.Up,
+			Matrix.CreateRotationX(_rotation.X) *
+			Matrix.CreateRotationY(_rotation.Y) *
+			Matrix.CreateRotationZ(_rotation.Z));
+
+		return Matrix.CreateLookAt(
+			_position,
+			_position + forward,
+			up);
 	}
 
 	public Matrix GetProjectionMatrix()
