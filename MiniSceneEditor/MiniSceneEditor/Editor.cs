@@ -29,7 +29,7 @@ public class Editor : Game
 	private Vector3 _lightPosition = new Vector3(0, 10, 0);
 	private float _lightSize = 0.3f; // Розмір сфери світла
 
-	private Camera _camera;
+	private EditorCamera _camera;
 	private SceneObject _selectedObject;
 
 	private Scene _currentScene;
@@ -63,9 +63,9 @@ public class Editor : Game
 	{
 
 		_imGuiRenderer = new ImGuiRenderer(this);
-		_camera = new Camera(GraphicsDevice);
+		_camera = new EditorCamera(GraphicsDevice);
 		//_camera.Position = new Vector3(0, 10, -20);
-		_camera.LookAt(Vector3.Zero);
+		//_camera.LookAt(Vector3.Zero);
 		_currentScene = new Scene(GraphicsDevice);
 
 		// Додаємо тестові об'єкти (потім це буде завантаження з файлу)
@@ -140,22 +140,22 @@ public class Editor : Game
 		}
 
 		var rotation = new System.Numerics.Vector3(
-			MathHelper.ToDegrees(_camera.Rotation.X),
-			MathHelper.ToDegrees(_camera.Rotation.Y),
-			MathHelper.ToDegrees(_camera.Rotation.Z));
+			MathHelper.ToDegrees(_camera.RotationRadians.X),
+			MathHelper.ToDegrees(_camera.RotationRadians.Y),
+			MathHelper.ToDegrees(_camera.RotationRadians.Z));
 		if (ImGui.DragFloat3("Rotation (degrees)", ref rotation, 0.1f))
 		{
-			_camera.Rotation = new Vector3(
+			_camera.RotationRadians = new Vector3(
 				MathHelper.ToRadians(rotation.X),
 				MathHelper.ToRadians(rotation.Y),
 				MathHelper.ToRadians(rotation.Z));
 		}
 
-		var fov = MathHelper.ToDegrees(_camera.FieldOfView);
-		if (ImGui.SliderFloat("Field of View", ref fov, 1f, 120f))
-		{
-			_camera.FieldOfView = MathHelper.ToRadians(fov);
-		}
+		//var fov = MathHelper.ToDegrees(_camera.FieldOfView);
+		//if (ImGui.SliderFloat("Field of View", ref fov, 1f, 120f))
+		//{
+		//	_camera.FieldOfView = MathHelper.ToRadians(fov);
+		//}
 
 		ImGui.End();
 
@@ -268,6 +268,18 @@ public class Editor : Game
 
 		// Відображаємо вузол дерева
 		bool isOpen = ImGui.TreeNodeEx($"{obj.Name}###{obj.Id}", flags);
+
+		// Обробка подвійного кліку
+		if (ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(0))
+		{
+			_selectedObject = obj;
+			var keyboard = Keyboard.GetState();
+			bool withFocus = keyboard.IsKeyDown(Keys.LeftShift) ||
+							keyboard.IsKeyDown(Keys.RightShift);
+
+			_camera.FocusOn(obj.Transform.Position, withTransition: keyboard.IsKeyDown(Keys.LeftShift));
+		}
+
 
 		// Повертаємо колір тексту до стандартного
 		if (obj == _currentScene.MainCamera || obj == _currentScene.DirectionalLight)

@@ -39,12 +39,12 @@ public class Scene : IScene
 		var cameraComponent = MainCamera.AddComponent<CameraComponent>();
 		if (cameraComponent is IRenderable renderable)
 		{
-			System.Diagnostics.Debug.WriteLine("Setting GraphicsDevice for camera component");
+			//System.Diagnostics.Debug.WriteLine("Setting GraphicsDevice for camera component");
 			renderable.SetGraphicsDevice(_graphicsDevice);
 		}
 		else
 		{
-			System.Diagnostics.Debug.WriteLine("Camera component is not IRenderable!");
+			//System.Diagnostics.Debug.WriteLine("Camera component is not IRenderable!");
 		}
 
 		RegisterObject(MainCamera);
@@ -126,7 +126,7 @@ public class Scene : IScene
 		var cameraComponent = MainCamera.GetComponent<CameraComponent>();
 		if (cameraComponent == null)
 		{
-			System.Diagnostics.Debug.WriteLine("Main camera component not found!");
+			//System.Diagnostics.Debug.WriteLine("Main camera component not found!");
 			return;
 		}
 
@@ -134,7 +134,7 @@ public class Scene : IScene
 		foreach (var obj in _objects.Values)
 		{
 			obj.Render(view, projection);
-			System.Diagnostics.Debug.WriteLine($"Drawing object: {obj.Name}");
+			//System.Diagnostics.Debug.WriteLine($"Drawing object: {obj.Name}");
 		}
 	}
 
