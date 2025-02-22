@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System;
 using System.Linq;
 using Microsoft.Xna.Framework.Graphics;
-using MiniSceneEditor.Core;
+using MiniSceneEditor.Core.Components.Abstractions;
+using MiniSceneEditor.Core.Components.Impls;
 
 public class Scene : IScene
 {
@@ -68,8 +69,7 @@ public class Scene : IScene
 
 	public uint RegisterObject(SceneObject obj)
 	{
-		if (obj == null)
-			throw new ArgumentNullException(nameof(obj));
+		ArgumentNullException.ThrowIfNull(obj);
 
 		_objects[obj.Id] = obj;
 		return obj.Id;

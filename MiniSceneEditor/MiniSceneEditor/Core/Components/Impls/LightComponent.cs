@@ -1,4 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
+using MiniSceneEditor.Core.Components.Abstractions;
+
+namespace MiniSceneEditor.Core.Components.Impls;
 
 public class LightComponent : IComponent
 {

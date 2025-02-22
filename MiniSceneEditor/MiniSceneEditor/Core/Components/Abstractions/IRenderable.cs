@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace MiniSceneEditor.Core
+namespace MiniSceneEditor.Core.Components.Abstractions
 {
 	public interface IRenderable
 	{

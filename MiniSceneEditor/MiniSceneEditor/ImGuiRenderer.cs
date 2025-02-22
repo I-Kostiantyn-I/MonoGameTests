@@ -22,6 +22,7 @@ public class ImGuiRenderer : IDisposable
 	private Texture2D _fontTexture;
 	private int _scrollWheelValue;
 	private readonly Dictionary<Keys, int> _keyMap = new Dictionary<Keys, int>();
+	private KeyboardState _previousKeyboardState;
 
 	private struct VertexPositionColorTexture
 	{
@@ -37,7 +38,7 @@ public class ImGuiRenderer : IDisposable
 
 		_loadedTextures = new Dictionary<IntPtr, Texture2D>();
 		_textureId = 1;
-
+		 
 		ImGui.CreateContext();
 		var io = ImGui.GetIO();
 
@@ -96,6 +97,16 @@ public class ImGuiRenderer : IDisposable
 		_keyMap[Keys.X] = (int)ImGuiKey.X;
 		_keyMap[Keys.Y] = (int)ImGuiKey.Y;
 		_keyMap[Keys.Z] = (int)ImGuiKey.Z;
+
+		_keyMap[Keys.D0] = (int)ImGuiKey._0;
+		_keyMap[Keys.D1] = (int)ImGuiKey._1;
+		// ... і так далі для всіх цифр
+		_keyMap[Keys.NumPad0] = (int)ImGuiKey.Keypad0;
+		_keyMap[Keys.NumPad1] = (int)ImGuiKey.Keypad1;
+		// ... і так далі для всіх цифр цифрової клавіатури
+		_keyMap[Keys.OemPeriod] = (int)ImGuiKey.Period;
+		_keyMap[Keys.Decimal] = (int)ImGuiKey.KeypadDecimal;
+		_keyMap[Keys.OemMinus] = (int)ImGuiKey.Minus;
 	}
 
 	private unsafe void CreateDeviceObjects()
@@ -134,7 +145,7 @@ public class ImGuiRenderer : IDisposable
 		var io = ImGui.GetIO();
 
 		var mouse = Mouse.GetState();
-		var keyboard = Keyboard.GetState();
+		var currentKeyboardState = Keyboard.GetState();
 
 		// Оновлення позиції миші
 		io.AddMousePosEvent(mouse.X, mouse.Y);
@@ -152,22 +163,51 @@ public class ImGuiRenderer : IDisposable
 		// Оновлення клавіш
 		foreach (var key in _keyMap)
 		{
-			io.AddKeyEvent((ImGuiKey)key.Value, keyboard.IsKeyDown(key.Key));
+			io.AddKeyEvent((ImGuiKey)key.Value, currentKeyboardState.IsKeyDown(key.Key));
+		}
+
+		// Оновлення клавіш
+		foreach (var key in _keyMap)
+		{
+			io.AddKeyEvent((ImGuiKey)key.Value, currentKeyboardState.IsKeyDown(key.Key));
 		}
 
 		// Оновлення модифікаторів
-		io.AddKeyEvent(ImGuiKey.ModCtrl, keyboard.IsKeyDown(Keys.LeftControl) || keyboard.IsKeyDown(Keys.RightControl));
-		io.AddKeyEvent(ImGuiKey.ModShift, keyboard.IsKeyDown(Keys.LeftShift) || keyboard.IsKeyDown(Keys.RightShift));
-		io.AddKeyEvent(ImGuiKey.ModAlt, keyboard.IsKeyDown(Keys.LeftAlt) || keyboard.IsKeyDown(Keys.RightAlt));
+		io.AddKeyEvent(ImGuiKey.ModCtrl, currentKeyboardState.IsKeyDown(Keys.LeftControl) || currentKeyboardState.IsKeyDown(Keys.RightControl));
+		io.AddKeyEvent(ImGuiKey.ModShift, currentKeyboardState.IsKeyDown(Keys.LeftShift) || currentKeyboardState.IsKeyDown(Keys.RightShift));
+		io.AddKeyEvent(ImGuiKey.ModAlt, currentKeyboardState.IsKeyDown(Keys.LeftAlt) || currentKeyboardState.IsKeyDown(Keys.RightAlt));
 
 		// Додавання символів (для текстового вводу)
-		foreach (var c in keyboard.GetPressedKeys())
+		foreach (var key in currentKeyboardState.GetPressedKeys())
 		{
-			if (c >= Keys.A && c <= Keys.Z)
+			// Перевіряємо, чи клавіша тільки що була натиснута
+			if (!_previousKeyboardState.IsKeyDown(key))
 			{
-				io.AddInputCharacter((uint)c);
+				if (key >= Keys.A && key <= Keys.Z)
+				{
+					io.AddInputCharacter((uint)key);
+				}
+				else if (key >= Keys.D0 && key <= Keys.D9)
+				{
+					io.AddInputCharacter((uint)('0' + (key - Keys.D0)));
+				}
+				else if (key >= Keys.NumPad0 && key <= Keys.NumPad9)
+				{
+					io.AddInputCharacter((uint)('0' + (key - Keys.NumPad0)));
+				}
+				else if (key == Keys.OemPeriod || key == Keys.Decimal)
+				{
+					io.AddInputCharacter((uint)'.');
+				}
+				else if (key == Keys.OemMinus)
+				{
+					io.AddInputCharacter((uint)'-');
+				}
 			}
 		}
+
+		// Зберігаємо поточний стан клавіатури для наступного кадру
+		_previousKeyboardState = currentKeyboardState;
 	}
 
 	public void BeginLayout(GameTime gameTime)

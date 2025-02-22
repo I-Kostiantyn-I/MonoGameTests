@@ -1,8 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MiniSceneEditor.Core;
+using MiniSceneEditor.Core.Components.Abstractions;
 using System;
 using System.Collections.Generic;
+
+namespace MiniSceneEditor.Core.Components.Impls;
 
 public class CameraComponent : IComponent, IRenderable
 {

@@ -113,38 +113,52 @@ public class EditorCamera
 	{
 		_log.Log($"\nStarting focus on target: {targetPosition}");
 		_log.Log($"Current camera position: {_position}");
-		_log.Log($"Current angles - Yaw: {MathHelper.ToDegrees(_yaw):F2}°, Pitch: {MathHelper.ToDegrees(_pitch):F2}°");
-
-		// Зберігаємо цільову позицію
-		_targetPosition = targetPosition;
-
-		// Розраховуємо позицію камери позаду об'єкта
-		Vector3 targetCameraPosition = CalculateCameraPosition(targetPosition);
 
 		if (!withTransition)
 		{
-			// Миттєве переміщення
-			_position = targetCameraPosition;
+			// Відступаємо на 15 одиниць по Z від цілі
+			_position = targetPosition + new Vector3(0, 0, 15);
 
-			// Розрахунок напрямку погляду
-			Vector3 direction = _targetPosition - _position;
-			direction.Normalize();
+			// Розраховуємо вектор напрямку до цілі
+			Vector3 lookDir = targetPosition - _position;
+			lookDir.Normalize();
 
-			// Встановлення кутів
-			_yaw = (float)Math.Atan2(direction.X, direction.Z);
-			_pitch = (float)Math.Atan2(-direction.Y,
-				Math.Sqrt(direction.X * direction.X + direction.Z * direction.Z));
+			// Розраховуємо кути
+			_yaw = 0;  // Оскільки ми дивимось прямо, кут повороту 0
+			_pitch = -(float)Math.Asin(lookDir.Y); // Кут нахилу
 
 			_log.Log($"New position: {_position}");
-			_log.Log($"New angles - Yaw: {MathHelper.ToDegrees(_yaw):F2}°, Pitch: {MathHelper.ToDegrees(_pitch):F2}°");
-		}
-		else
-		{
-			_initialPosition = _position;
-			_targetPosition = targetPosition;
-			_isLookingAtTarget = true;
+			_log.Log($"Look direction: {lookDir}");
+			_log.Log($"Angles - Yaw: {MathHelper.ToDegrees(_yaw):F2}°, Pitch: {MathHelper.ToDegrees(_pitch):F2}°");
 		}
 	}
+
+	// проста але робоча версія
+	//public void FocusOn(Vector3 targetPosition, bool withTransition)
+	//{
+	//	_log.Log($"\nStarting focus on target: {targetPosition}");
+	//	_log.Log($"Current camera position: {_position}");
+
+	//	if (!withTransition)
+	//	{
+	//		// Зберігаємо поточну висоту камери
+	//		float currentHeight = _position.Y;
+
+	//		// Відступаємо на 15 одиниць по Z від цілі
+	//		_position = targetPosition + new Vector3(0, 0, 15);
+
+	//		// Розраховуємо вектор напрямку
+	//		Vector3 lookDir = targetPosition - _position;
+	//		lookDir.Normalize();
+
+	//		// Встановлюємо кути напряму
+	//		_yaw = 0;  // Скидаємо поворот
+	//		_pitch = 0; // Скидаємо нахил
+
+	//		_log.Log($"New position: {_position}");
+	//		_log.Log($"Look direction: {lookDir}");
+	//	}
+	//}
 
 	private void LookAt(Vector3 targetPosition)
 	{
@@ -247,12 +261,12 @@ public class EditorCamera
 
 	private Vector3 CalculateCameraPosition(Vector3 targetPosition)
 	{
-		// Розміщуємо камеру позаду об'єкта
-		return new Vector3(
-			targetPosition.X,
-			targetPosition.Y + 5.0f, // Трохи вище об'єкта
-			targetPosition.Z + DEFAULT_DISTANCE // Позаду об'єкта
-		);
+		// Розраховуємо напрямок від камери до цілі
+		Vector3 direction = targetPosition - _position;
+		direction.Normalize();
+
+		// Встановлюємо позицію камери на фіксованій відстані позаду цілі
+		return targetPosition - direction * DEFAULT_DISTANCE;
 	}
 
 	private void UpdateFocusing(float deltaTime)
@@ -260,25 +274,26 @@ public class EditorCamera
 		if (!_isLookingAtTarget)
 			return;
 
-		// Розраховуємо цільову позицію
-		Vector3 targetCameraPosition = CalculateCameraPosition(_targetPosition);
-
-		// Плавне переміщення
-		_position = Vector3.Lerp(_position, targetCameraPosition, deltaTime * _smoothLookSpeed);
-
-		// Розрахунок напрямку погляду
+		// Розрахунок напрямку до цілі
 		Vector3 direction = _targetPosition - _position;
 		direction.Normalize();
 
-		// Плавне обертання
+		// Розрахунок цільових кутів
 		float targetYaw = (float)Math.Atan2(direction.X, direction.Z);
 		float targetPitch = (float)Math.Atan2(-direction.Y,
 			Math.Sqrt(direction.X * direction.X + direction.Z * direction.Z));
 
+		// Плавне обертання
 		_yaw = MathHelper.Lerp(_yaw, targetYaw, deltaTime * _smoothLookSpeed);
 		_pitch = MathHelper.Lerp(_pitch, targetPitch, deltaTime * _smoothLookSpeed);
 
+		// Плавне переміщення до цільової позиції
+		Vector3 targetCameraPosition = _targetPosition - direction * DEFAULT_DISTANCE;
+		_position = Vector3.Lerp(_position, targetCameraPosition, deltaTime * _smoothLookSpeed);
+
 		_log.Log($"Focusing - Position: {_position}");
+		_log.Log($"Target Position: {_targetPosition}");
+		_log.Log($"Direction: {direction}");
 		_log.Log($"Current angles - Yaw: {MathHelper.ToDegrees(_yaw):F2}°, Pitch: {MathHelper.ToDegrees(_pitch):F2}°");
 
 		// Перевірка завершення
