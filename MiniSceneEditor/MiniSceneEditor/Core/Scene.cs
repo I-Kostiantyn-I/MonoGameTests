@@ -6,6 +6,8 @@ using Microsoft.Xna.Framework.Graphics;
 using MiniSceneEditor.Core.Components.Abstractions;
 using MiniSceneEditor.Core.Components.Impls;
 
+namespace Microsoft.Core;
+
 public class Scene : IScene
 {
 	// Зберігання всіх об'єктів сцени
@@ -15,6 +17,8 @@ public class Scene : IScene
 	// Системні об'єкти
 	public SceneObject MainCamera { get; private set; }
 	public SceneObject DirectionalLight { get; private set; }
+
+	public GraphicsDevice GraphicsDevice => _graphicsDevice;
 
 	public Scene(GraphicsDevice graphicsDevice)
 	{
@@ -40,8 +44,7 @@ public class Scene : IScene
 		var cameraComponent = MainCamera.AddComponent<CameraComponent>();
 		if (cameraComponent is IRenderable renderable)
 		{
-			//System.Diagnostics.Debug.WriteLine("Setting GraphicsDevice for camera component");
-			renderable.SetGraphicsDevice(_graphicsDevice);
+			renderable.SetGraphicsDevice(GraphicsDevice);
 		}
 		else
 		{
@@ -126,7 +129,6 @@ public class Scene : IScene
 		var cameraComponent = MainCamera.GetComponent<CameraComponent>();
 		if (cameraComponent == null)
 		{
-			//System.Diagnostics.Debug.WriteLine("Main camera component not found!");
 			return;
 		}
 
@@ -134,7 +136,6 @@ public class Scene : IScene
 		foreach (var obj in _objects.Values)
 		{
 			obj.Render(view, projection);
-			//System.Diagnostics.Debug.WriteLine($"Drawing object: {obj.Name}");
 		}
 	}
 

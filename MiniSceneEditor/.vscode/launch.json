@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch and Debug",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${workspaceFolder}/MiniSceneEditor/bin/Debug/net8.0/${workspaceFolderBasename}.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        }
+    ]
+}

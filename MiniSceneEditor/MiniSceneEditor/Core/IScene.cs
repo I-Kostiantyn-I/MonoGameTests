@@ -1,6 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 
+namespace Microsoft.Core;
+
 public interface IScene
 {
 	// Основні системні об'єкти (обов'язкові)

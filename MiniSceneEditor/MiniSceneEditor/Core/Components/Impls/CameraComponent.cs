@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Microsoft.Core;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiniSceneEditor.Core.Components.Abstractions;
 using System;
@@ -24,7 +25,6 @@ public class CameraComponent : IComponent, IRenderable
 
 	public void SetGraphicsDevice(GraphicsDevice graphicsDevice)
 	{
-		System.Diagnostics.Debug.WriteLine("Setting GraphicsDevice for CameraComponent");
 		_graphicsDevice = graphicsDevice;
 		_debugEffect = new BasicEffect(graphicsDevice)
 		{
@@ -75,18 +75,10 @@ public class CameraComponent : IComponent, IRenderable
 	{
 		if (!_isInitialized)
 		{
-			System.Diagnostics.Debug.WriteLine("CameraComponent not initialized!");
 			return;
 		}
 
-		System.Diagnostics.Debug.WriteLine("\nCamera Render Start:");
-		System.Diagnostics.Debug.WriteLine($"Owner Position: {Owner.Transform.Position}");
-		System.Diagnostics.Debug.WriteLine($"Owner Rotation: {Owner.Transform.Rotation}");
-
 		var worldMatrix = Owner.Transform.GetWorldMatrix();
-		System.Diagnostics.Debug.WriteLine($"World Matrix: {worldMatrix}");
-		System.Diagnostics.Debug.WriteLine($"View Matrix: {view}");
-		System.Diagnostics.Debug.WriteLine($"Projection Matrix: {projection}");
 
 		// Зберігаємо поточний стан
 		var currentBlendState = _graphicsDevice.BlendState;
@@ -120,8 +112,6 @@ public class CameraComponent : IComponent, IRenderable
 					0,
 					9);
 			}
-
-			System.Diagnostics.Debug.WriteLine("Draw call completed");
 		}
 		catch (Exception ex)
 		{
@@ -256,8 +246,5 @@ public class CameraComponent : IComponent, IRenderable
 			BufferUsage.WriteOnly);
 
 		_cameraVertexBuffer.SetData(vertices.ToArray());
-
-		System.Diagnostics.Debug.WriteLine($"Created camera visual with {vertices.Count} vertices");
-		System.Diagnostics.Debug.WriteLine($"Visual size: {size}");
 	}
 }

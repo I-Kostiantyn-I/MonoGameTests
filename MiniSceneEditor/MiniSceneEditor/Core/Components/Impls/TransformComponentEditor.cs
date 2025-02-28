@@ -3,6 +3,7 @@ using MiniSceneEditor.Core.Components.Abstractions;
 using MiniSceneEditor.Core.Utils;
 
 namespace MiniSceneEditor.Core.Components.Impls;
+
 public class TransformComponentEditor : ComponentEditor<TransformComponent>
 {
 	public TransformComponentEditor(TransformComponent component) : base(component) { }

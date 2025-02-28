@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using System;
 using System.Linq;
@@ -6,7 +7,9 @@ using MiniSceneEditor.Core;
 using MiniSceneEditor.Core.Components.Abstractions;
 using MiniSceneEditor.Core.Components.Impls;
 
-public class SceneObject : IDisposable
+namespace Microsoft.Core;
+
+public class SceneObject : IDisposable //DrawableGameComponent
 {
 	public uint Id { get; }
 	public string Name { get; set; }
@@ -14,7 +17,14 @@ public class SceneObject : IDisposable
 	public SceneObject Parent { get; private set; }
 	public List<SceneObject> Children { get; } = new();
 	public bool IsVisible { get; set; } = true;
-	public bool IsSelected { get; set; }
+	public Vector2 Position { get; set; }
+	public Texture2D Texture { get; set; }
+
+	public bool IsMouseOver(Vector2 mousePosition)
+	{
+		return mousePosition.X >= Position.X && mousePosition.X <= Position.X + Texture.Width &&
+			 mousePosition.Y >= Position.Y && mousePosition.Y <= Position.Y + Texture.Height;
+	}
 
 	public IReadOnlySet<IComponent> Components { get; }
 
@@ -145,6 +155,24 @@ public class SceneObject : IDisposable
 	{
 		return Vector3.Transform(Transform.Position, GetWorldMatrix());
 	}
+
+	/*public override void Draw(GameTime gameTime)
+    {
+        SpriteBatch spriteBatch = (SpriteBatch)Game.Services.GetService(typeof(SpriteBatch));
+        spriteBatch.Begin();
+        spriteBatch.Draw(Texture, Position, Color.White);
+        
+        // Додати візуальне позначення об'єкта якщо він вибран
+        if (IsSelected)
+        {
+            Rectangle bounds = new Rectangle((int)Position.X, (int)Position.Y, Texture.Width, Texture.Height);
+            spriteBatch.Draw(Game.Content.Load<Texture2D>("SelectionBox"), bounds, Color.Red * 0.5f);
+        }
+
+        spriteBatch.End();
+
+        base.Draw(gameTime);
+    }*/
 
 	// Очищення ресурсів
 	public void Dispose()

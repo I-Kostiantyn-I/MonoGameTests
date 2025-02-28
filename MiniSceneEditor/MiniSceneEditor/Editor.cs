@@ -1,7 +1,11 @@
 ﻿using ImGuiNET;
+using Microsoft.Core;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MiniSceneEditor.Camera;
+using MiniSceneEditor.Commands;
+using MiniSceneEditor.Gizmo;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,6 +39,16 @@ public partial class Editor : Game
 	private Scene _currentScene;
 	private string _sceneName = "noname";
 
+	private CommandManager _commandManager;
+
+	private SnapSystem _snapSystem;
+	private SnapGrid _snapGrid;
+
+	private InputManager _inputManager;
+
+	private SelectManager _selectManager;
+	private GizmoSystem _gizmoSystem;
+
 	public Editor()
 	{
 		_graphics = new GraphicsDeviceManager(this);
@@ -50,6 +64,12 @@ public partial class Editor : Game
 		Window.AllowUserResizing = true;
 		Window.ClientSizeChanged += Window_ClientSizeChanged;
 
+		_commandManager = new CommandManager();
+
+		
+		_snapSystem = new SnapSystem(_currentScene);
+		_snapGrid = new SnapGrid(GraphicsDevice, _snapSystem.Settings);
+
 		ComponentRegister();
 	}
 
@@ -64,12 +84,21 @@ public partial class Editor : Game
 
 	protected override void Initialize()
 	{
+		_inputManager = new InputManager();
 
 		_imGuiRenderer = new ImGuiRenderer(this);
 		_camera = new EditorCamera(GraphicsDevice);
-		//_camera.Position = new Vector3(0, 10, -20);
-		//_camera.LookAt(Vector3.Zero);
+
 		_currentScene = new Scene(GraphicsDevice);
+
+		_selectManager = new SelectManager(_currentScene);
+		_selectManager.OnSelectionChanged += HandleSelectionChanged;
+		_gizmoSystem = new GizmoSystem(
+		   GraphicsDevice,
+		   _commandManager,
+		   _snapSystem
+	   );
+
 
 		// Додаємо тестові об'єкти (потім це буде завантаження з файлу)
 		var testObject = new SceneObject("Test Object");
@@ -94,13 +123,40 @@ public partial class Editor : Game
 
 	protected override void Update(GameTime gameTime)
 	{
-		//if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
-		//	Keyboard.GetState().IsKeyDown(Keys.Escape))
-		//	Exit();
+		_inputManager.Update();
+		var inputState = _inputManager.CurrentState;
 
-		_camera.Update(gameTime);
+		// Завжди оновлюємо камеру
+		_camera.Update(gameTime, inputState);
+
+		Matrix view = _camera.GetViewMatrix();
+		Matrix projection = _camera.GetProjectionMatrix();
+		var cameraState = new CameraMatricesState(view, projection);
+
+		// Оновлюємо SelectManager
+		_selectManager.Update(inputState, cameraState);
+
+		// Оновлюємо гізмо тільки якщо:
+		// 1. Не натиснута права кнопка миші (щоб не заважати обертанню камери)
+		// 2. Є вибраний об'єкт (перевіряємо через SelectManager)
+		if (_selectManager.HasSelection && inputState.CurrentMouse.RightButton != ButtonState.Pressed)
+		{
+			_gizmoSystem.HandleInput(inputState, cameraState);
+		}
 
 		base.Update(gameTime);
+	}
+
+	private void UpdateGizmos(InputState inputState)
+	{
+		// todo: move to method
+		Matrix view = _camera.GetViewMatrix();
+		Matrix projection = _camera.GetProjectionMatrix();
+		var cameraState = new CameraMatricesState(view, projection);
+
+
+		// Оновлення гізмо з новим InputState
+		_gizmoSystem?.HandleInput(inputState, cameraState);
 	}
 
 	protected override void Draw(GameTime gameTime)
@@ -114,17 +170,23 @@ public partial class Editor : Game
 		// Налаштування камери
 		Matrix view = _camera.GetViewMatrix();
 		Matrix projection = _camera.GetProjectionMatrix();
-
+		var cameraState = new CameraMatricesState(view, projection);
 		DrawGrid(view, projection);
 
 		DrawLightObject(view, projection);
 		// Рендеримо сцену використовуючи камеру редактора
 		_currentScene.Draw(view, projection);
+
+		_gizmoSystem.Draw(cameraState);
 		//foreach (var obj in _sceneObjects)
 		//{
 		//	obj.Render(view, projection);
 		//}
+
+		// тимчасово вимкнути
 		DrawGUI(gameTime);
+
+		_snapGrid.Draw(_camera.GetViewMatrix(), _camera.GetProjectionMatrix());
 
 		base.Draw(gameTime);
 	}
@@ -139,8 +201,6 @@ public partial class Editor : Game
 		base.UnloadContent();
 	}
 
-	
-
 	private bool IsChildOf(SceneObject parent, SceneObject potentialChild)
 	{
 		var current = potentialChild;
@@ -151,17 +211,6 @@ public partial class Editor : Game
 			current = current.Parent;
 		}
 		return false;
-	}
-
-
-	// Допоміжні методи
-	private void ClearSelection(List<SceneObject> objects)
-	{
-		foreach (var obj in objects)
-		{
-			obj.IsSelected = false;
-			ClearSelection(obj.Children);
-		}
 	}
 
 	private bool IsParentOf(SceneObject parent, SceneObject child)
@@ -176,6 +225,23 @@ public partial class Editor : Game
 		}
 
 		return false;
+	}
+
+	private void HandleSelectionChanged(List<SceneObject> selectedObjects)
+	{
+		System.Diagnostics.Debug.WriteLine($"Selection changed: {selectedObjects.Count} objects selected");
+
+		if (selectedObjects.Count > 0)
+		{
+			var selectedObject = selectedObjects[0];
+			System.Diagnostics.Debug.WriteLine($"Selected object: {selectedObject.Name}");
+			_gizmoSystem.SetTarget(selectedObject); // Тепер передаємо SceneObject замість Transform
+		}
+		else
+		{
+			System.Diagnostics.Debug.WriteLine("No objects selected");
+			_gizmoSystem.SetTarget(null);
+		}
 	}
 
 	private void RemoveObjectFromParent(SceneObject obj)
@@ -235,7 +301,6 @@ public partial class Editor : Game
 
 		return false;
 	}
-
 
 	private void CreateGrid()
 	{

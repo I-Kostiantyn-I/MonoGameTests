@@ -1,6 +1,8 @@
 ﻿using ImGuiNET;
+using Microsoft.Core;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using MiniSceneEditor.Commands;
 using MiniSceneEditor.Core.Components;
 using MiniSceneEditor.Core.Components.Impls;
 using System;
@@ -15,6 +17,87 @@ public partial class Editor
 		ComponentEditorFactory.RegisterEditor<TransformComponent, TransformComponentEditor>();
 		//ComponentEditorFactory.RegisterEditor<CameraComponent, CameraComponentEditor>();
 	}
+
+	private void DrawSceneHierarchy()
+	{
+		ImGui.Begin("Scene Hierarchy");
+
+		foreach (var obj in _currentScene.GetRootObjects())
+		{
+			DrawHierarchyNode(obj);
+		}
+
+		if (ImGui.BeginPopupContextWindow())
+		{
+			if (ImGui.MenuItem("Add Empty Object"))
+			{
+				var newObj = new SceneObject($"New Object {_currentScene.GetRootObjects().Count()}");
+				_currentScene.RegisterObject(newObj);
+			}
+			ImGui.EndPopup();
+		}
+
+		ImGui.End();
+	}
+
+	private void DrawHierarchyNode(SceneObject obj)
+	{
+		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags.OpenOnArrow |
+								 ImGuiTreeNodeFlags.SpanAvailWidth;
+
+		if (obj.Children.Count == 0)
+			flags |= ImGuiTreeNodeFlags.Leaf;
+
+		if (_selectManager.SelectedObjects.Contains(obj))
+			flags |= ImGuiTreeNodeFlags.Selected;
+
+		bool isOpen = ImGui.TreeNodeEx($"{obj.Name}###{obj.Id}", flags);
+
+		if (ImGui.IsItemClicked())
+		{
+			_selectManager.HandleSceneHierarchySelection(obj,
+				ImGui.GetIO().KeyCtrl);
+		}
+
+		if (ImGui.BeginPopupContextItem())
+		{
+			if (ImGui.MenuItem("Add Child"))
+			{
+				var newChild = new SceneObject($"New Child {obj.Children.Count}");
+				_currentScene.RegisterObject(newChild);
+				obj.AddChild(newChild);
+			}
+
+			if (ImGui.MenuItem("Delete"))
+			{
+				if (_selectManager.SelectedObjects.Contains(obj))
+					_selectManager.ClearSelection();
+				_currentScene.UnregisterObject(obj.Id);
+			}
+
+			if (ImGui.MenuItem("Rename"))
+			{
+				// TODO: Додати логіку перейменування
+			}
+
+			ImGui.EndPopup();
+		}
+
+		if (isOpen)
+		{
+			foreach (var child in obj.Children)
+			{
+				DrawHierarchyNode(child);
+			}
+			ImGui.TreePop();
+		}
+	}
+
+
+
+
+
+
 	private void DrawGUI(GameTime gameTime)
 	{
 
@@ -31,7 +114,7 @@ public partial class Editor
 			//DrawObjectProperties();
 		}
 
-
+		_snapSystem.DrawGUI();
 
 		_imGuiRenderer.EndLayout();
 	}
@@ -133,7 +216,7 @@ public partial class Editor
 		ImGui.End();
 	}
 
-	private void DrawSceneHierarchy()
+	private void DrawSceneHierarchy2()
 	{
 		ImGui.Begin($"Scene Hierarchy - {_sceneName}");
 
@@ -268,5 +351,25 @@ public partial class Editor
 			}
 			ImGui.TreePop();
 		}
+	}
+
+	private void DrawCommandHistory()
+	{
+		if (ImGui.Begin("History"))
+		{
+			if (ImGui.Button("Undo"))
+				_commandManager.Undo();
+
+			ImGui.SameLine();
+
+			if (ImGui.Button("Redo"))
+				_commandManager.Redo();
+
+			ImGui.Separator();
+
+			// Можна додати відображення списку команд
+			// TODO: Додати доступ до списку команд в CommandManager
+		}
+		ImGui.End();
 	}
 }

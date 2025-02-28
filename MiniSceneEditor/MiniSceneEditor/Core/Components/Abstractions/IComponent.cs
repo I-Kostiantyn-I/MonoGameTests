@@ -1,4 +1,6 @@
-﻿namespace MiniSceneEditor.Core.Components.Abstractions;
+﻿using Microsoft.Core;
+
+namespace MiniSceneEditor.Core.Components.Abstractions;
 
 public interface IComponent
 {

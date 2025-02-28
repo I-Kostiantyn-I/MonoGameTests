@@ -1,9 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 
-namespace MiniSceneEditor.Core
+namespace MiniSceneEditor.Core;
+
+public interface ISceneUpdateable
 {
-	public interface ISceneUpdateable
-	{
-		void Update(GameTime gameTime);
-	}
+	void Update(GameTime gameTime);
 }

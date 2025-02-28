@@ -32,7 +32,7 @@ public class EditorLogger
 
 		var logMessage = $"[{DateTime.Now:HH:mm:ss.fff}] {_componentName} {message}";
 		File.AppendAllText(_logPath, logMessage + "\n");
-		System.Diagnostics.Debug.WriteLine(logMessage);
+		//System.Diagnostics.Debug.WriteLine(logMessage);
 	}
 
 	public void LogVector3(string name, Vector3 vector)
