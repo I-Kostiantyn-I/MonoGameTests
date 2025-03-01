@@ -26,7 +26,7 @@ public class SceneObject : IDisposable //DrawableGameComponent
 			 mousePosition.Y >= Position.Y && mousePosition.Y <= Position.Y + Texture.Height;
 	}
 
-	public IReadOnlySet<IComponent> Components { get; }
+	public IReadOnlySet<IComponent> Components => _components.Values.ToHashSet();
 
 	private Dictionary<Type, IComponent> _components = new();
 	private static uint _nextId = 1;
@@ -226,5 +226,17 @@ public class SceneObject : IDisposable //DrawableGameComponent
 		}
 
 		return clone;
+	}
+
+	public override bool Equals(object obj)
+	{
+		if (obj == null || obj is not SceneObject sceneObject) return false;
+
+		return Id == sceneObject.Id;
+	}
+
+	public override int GetHashCode()
+	{
+		return Id.GetHashCode();
 	}
 }

@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MiniSceneEditor.Camera;
 using MiniSceneEditor.Commands;
+using MiniSceneEditor.Core.Components.Impls;
 using MiniSceneEditor.Gizmo;
 using System;
 using System.Collections.Generic;
@@ -34,7 +35,7 @@ public partial class Editor : Game
 	private float _lightSize = 0.3f; // Розмір сфери світла
 
 	private EditorCamera _camera;
-	private SceneObject _selectedObject;
+	//private SceneObject _selectedObject;
 
 	private Scene _currentScene;
 	private string _sceneName = "noname";
@@ -48,6 +49,8 @@ public partial class Editor : Game
 
 	private SelectManager _selectManager;
 	private GizmoSystem _gizmoSystem;
+
+	private readonly EditorLogger _log;
 
 	public Editor()
 	{
@@ -71,6 +74,8 @@ public partial class Editor : Game
 		_snapGrid = new SnapGrid(GraphicsDevice, _snapSystem.Settings);
 
 		ComponentRegister();
+
+		_log = new EditorLogger(nameof(Editor));
 	}
 
 	private void Window_ClientSizeChanged(object sender, EventArgs e)
@@ -92,7 +97,7 @@ public partial class Editor : Game
 		_currentScene = new Scene(GraphicsDevice);
 
 		_selectManager = new SelectManager(_currentScene);
-		_selectManager.OnSelectionChanged += HandleSelectionChanged;
+		_selectManager.OnSingleSelectionChanged += HandleSelectionChanged;
 		_gizmoSystem = new GizmoSystem(
 		   GraphicsDevice,
 		   _commandManager,
@@ -101,19 +106,31 @@ public partial class Editor : Game
 
 
 		// Додаємо тестові об'єкти (потім це буде завантаження з файлу)
-		var testObject = new SceneObject("Test Object");
-		_currentScene.RegisterObject(testObject);
+		//var testObject = new SceneObject("Test Object");
+		//_currentScene.RegisterObject(testObject);
 
-		var childObject = new SceneObject("Child Object");
-		testObject.AddChild(childObject);
+		//var childObject = new SceneObject("Child Object");
+		//testObject.AddChild(childObject);
 
-		var subChildObject = new SceneObject("Sub Child");
-		childObject.AddChild(subChildObject);
+		//var subChildObject = new SceneObject("Sub Child");
+		//childObject.AddChild(subChildObject);
 
 		CreateGrid();
 		CreateLightSource();
 
 		base.Initialize();
+	}
+
+	private void HandleSelectionChanged(SceneObject @object)
+	{
+		if (@object != null)
+		{
+			_gizmoSystem.SetTarget(@object); // Тепер передаємо SceneObject замість Transform
+		}
+		else
+		{
+			_gizmoSystem.SetTarget(null);
+		}
 	}
 
 	protected override void LoadContent()
@@ -159,6 +176,27 @@ public partial class Editor : Game
 		_gizmoSystem?.HandleInput(inputState, cameraState);
 	}
 
+	private void CreateBoxObject()
+	{
+		var boxObject = new SceneObject($"Box_{_currentScene.GetRootObjects().Count()}");
+		_log.Log($"Creating box object: {boxObject.Name}");
+
+		var meshComponent = boxObject.AddComponent<MeshComponent>();
+		_log.Log("MeshComponent added");
+
+		meshComponent.SetGraphicsDevice(GraphicsDevice);
+		_log.Log("GraphicsDevice set");
+
+		meshComponent.MeshType = MeshType.Box;
+		_log.Log("Mesh type set to Box");
+
+		_currentScene.RegisterObject(boxObject);
+		_log.Log("Object registered in scene");
+
+		_selectManager.SelectObject(boxObject);
+		_log.Log("Object selected");
+	}
+
 	protected override void Draw(GameTime gameTime)
 	{
 		GraphicsDevice.Clear(Color.CornflowerBlue);
@@ -187,6 +225,8 @@ public partial class Editor : Game
 		DrawGUI(gameTime);
 
 		_snapGrid.Draw(_camera.GetViewMatrix(), _camera.GetProjectionMatrix());
+
+		
 
 		base.Draw(gameTime);
 	}
@@ -227,22 +267,22 @@ public partial class Editor : Game
 		return false;
 	}
 
-	private void HandleSelectionChanged(List<SceneObject> selectedObjects)
-	{
-		System.Diagnostics.Debug.WriteLine($"Selection changed: {selectedObjects.Count} objects selected");
+	//private void HandleSelectionChanged(List<SceneObject> selectedObjects)
+	//{
+	//	System.Diagnostics.Debug.WriteLine($"Selection changed: {selectedObjects.Count} objects selected");
 
-		if (selectedObjects.Count > 0)
-		{
-			var selectedObject = selectedObjects[0];
-			System.Diagnostics.Debug.WriteLine($"Selected object: {selectedObject.Name}");
-			_gizmoSystem.SetTarget(selectedObject); // Тепер передаємо SceneObject замість Transform
-		}
-		else
-		{
-			System.Diagnostics.Debug.WriteLine("No objects selected");
-			_gizmoSystem.SetTarget(null);
-		}
-	}
+	//	if (selectedObjects.Count > 0)
+	//	{
+	//		var selectedObject = selectedObjects[0];
+	//		System.Diagnostics.Debug.WriteLine($"Selected object: {selectedObject.Name}");
+	//		_gizmoSystem.SetTarget(selectedObject); // Тепер передаємо SceneObject замість Transform
+	//	}
+	//	else
+	//	{
+	//		System.Diagnostics.Debug.WriteLine("No objects selected");
+	//		_gizmoSystem.SetTarget(null);
+	//	}
+	//}
 
 	private void RemoveObjectFromParent(SceneObject obj)
 	{

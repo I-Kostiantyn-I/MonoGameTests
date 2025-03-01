@@ -13,53 +13,58 @@ public class SelectManager
 {
 	private readonly Scene _scene;
 	private readonly List<SceneObject> _selectedObjects = new List<SceneObject>();
+	private SceneObject _selectedObject = null;
 	private SceneObject _hoveredObject;
 
-	public event Action<List<SceneObject>> OnSelectionChanged;
+	//public event Action<List<SceneObject>> OnMultiSelectionChanged;
+	public event Action<SceneObject> OnSingleSelectionChanged;
 	public IReadOnlyList<SceneObject> SelectedObjects => _selectedObjects;
 	public bool HasSelection => _selectedObjects.Count > 0;
+
+	public SceneObject SelectedSceneObject => _selectedObject;
 
 	public SelectManager(Scene scene)
 	{
 		_scene = scene;
 	}
 
-	public void SelectObject(SceneObject obj, bool addToSelection = false)
+	private void SelectObject(SceneObject obj, bool addToSelection = false)
 	{
-		if (obj == null)
-		{
-			if (!addToSelection)
-			{
-				ClearSelection();
-			}
-			return;
-		}
+		SelectObject(obj);
+		//if (obj == null)
+		//{
+		//	if (!addToSelection)
+		//	{
+		//		ClearSelection();
+		//	}
+		//	return;
+		//}
 
-		if (addToSelection)
-		{
-			if (_selectedObjects.Contains(obj))
-			{
-				_selectedObjects.Remove(obj);
-			}
-			else
-			{
-				_selectedObjects.Add(obj);
-			}
-		}
-		else
-		{
-			//ClearSelection();
-			_selectedObjects.Add(obj);
-		}
+		//if (addToSelection)
+		//{
+		//	if (_selectedObjects.Contains(obj))
+		//	{
+		//		_selectedObjects.Remove(obj);
+		//	}
+		//	else
+		//	{
+		//		_selectedObjects.Add(obj);
+		//	}
+		//}
+		//else
+		//{
+		//	//ClearSelection();
+		//	_selectedObjects.Add(obj);
+		//}
 
-		OnSelectionChanged?.Invoke(_selectedObjects);
+		
 	}
 
-	public void ClearSelection()
-	{
-		_selectedObjects.Clear();
-		OnSelectionChanged?.Invoke(_selectedObjects);
-	}
+	//public void ClearSelection()
+	//{
+	//	_selectedObjects.Clear();
+	//	OnSelectionChanged?.Invoke(_selectedObjects);
+	//}
 
 	public void HandleSceneHierarchySelection(SceneObject obj, bool isCtrlPressed)
 	{
@@ -71,16 +76,61 @@ public class SelectManager
 		if (ImGui.GetIO().WantCaptureMouse)
 			return;
 
-		// Оновлення наведення
-		UpdateHovering(input, camera);
-
-		// Обробка кліку
+		// Обробляємо вибір тільки при кліку лівою кнопкою миші
 		if (input.IsMouseButtonPressed(ButtonState.Pressed))
 		{
-			bool isMultiSelect = input.IsControlDown() || input.IsShiftDown();
-			SelectObject(_hoveredObject, isMultiSelect);
+			Ray ray = CreatePickingRay(input.MousePosition, camera);
+			var hitObject = FindNearestObject(ray);
+
+			// Змінюємо вибір тільки якщо попали в якийсь об'єкт
+			if (hitObject != null)
+			{
+				SelectObject(hitObject);
+			}
+			// Якщо не попали в об'єкт - залишаємо поточний вибір без змін
 		}
 	}
+
+	public void SelectObject(SceneObject obj)
+	{
+		if (obj != null && (_selectedObject == null || _selectedObject.Id != obj.Id)) // Додаємо перевірку на null
+		{
+			_selectedObject = null;
+			_selectedObject = obj;
+			OnSingleSelectionChanged?.Invoke(_selectedObject);
+			System.Diagnostics.Debug.WriteLine($"Selected object changed to: {obj.Name}");
+		}
+
+		if (obj == null)
+			OnSingleSelectionChanged?.Invoke(obj);
+	}
+
+	// Явний метод для очищення вибору, якщо потрібно
+	public void ClearSelection()
+	{
+		if (_selectedObjects != null)
+		{
+			_selectedObjects.Clear();
+			OnSingleSelectionChanged?.Invoke(null);
+			System.Diagnostics.Debug.WriteLine("Selection cleared");
+		}
+	}
+
+	//public void Update(InputState input, CameraMatricesState camera)
+	//{
+	//	if (ImGui.GetIO().WantCaptureMouse)
+	//		return;
+
+	//	// Оновлення наведення
+	//	UpdateHovering(input, camera);
+
+	//	// Обробка кліку
+	//	if (input.IsMouseButtonPressed(ButtonState.Pressed))
+	//	{
+	//		bool isMultiSelect = input.IsControlDown() || input.IsShiftDown();
+	//		SelectObject(_hoveredObject, isMultiSelect);
+	//	}
+	//}
 
 	// Отримати перший вибраний об'єкт (активний)
 	public SceneObject GetActiveObject()
@@ -93,6 +143,27 @@ public class SelectManager
 	{
 		return _selectedObjects.Contains(obj);
 	}
+
+
+	public void DrawDebugInfo()
+	{
+		if (ImGui.Begin("Selection Debug"))
+		{
+			if (_selectedObjects.Any())
+			{
+				ImGui.Text($"Selected: {_selectedObjects[0].Name}");
+				ImGui.Text($"Position: {_selectedObjects[0].Transform.Position}");
+				ImGui.Text($"Rotation: {_selectedObjects[0].Transform.Rotation}");
+				ImGui.Text($"Scale: {_selectedObjects[0].Transform.Scale}");
+			}
+			else
+			{
+				ImGui.Text("No object selected");
+			}
+		}
+		ImGui.End();
+	}
+
 
 	private void UpdateHovering(InputState input, CameraMatricesState camera)
 	{

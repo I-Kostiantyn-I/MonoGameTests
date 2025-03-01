@@ -13,6 +13,7 @@ public class Scene : IScene
 	// Зберігання всіх об'єктів сцени
 	private Dictionary<uint, SceneObject> _objects;
 	private readonly GraphicsDevice _graphicsDevice;
+	private readonly EditorLogger _log;
 
 	// Системні об'єкти
 	public SceneObject MainCamera { get; private set; }
@@ -27,7 +28,7 @@ public class Scene : IScene
 
 		// Створення обов'язкових системних об'єктів
 		InitializeSystemObjects();
-		
+		_log = new EditorLogger(nameof(Scene));
 	}
 
 	private void InitializeSystemObjects()
@@ -135,7 +136,19 @@ public class Scene : IScene
 		// Рендеримо всі об'єкти
 		foreach (var obj in _objects.Values)
 		{
+			_log.Log($"Drawing object: {obj.Name}");
 			obj.Render(view, projection);
+
+
+			// видалити цей цикл
+			foreach (var component in obj.Components)
+			{
+				if (component is IRenderable renderable)
+				{
+					_log.Log($"Rendering component: {component.GetType().Name}");
+					//renderable.Render(view, projection);
+				}
+			}
 		}
 	}
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.Core;
+﻿using ImGuiNET;
+using Microsoft.Core;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MiniSceneEditor.Camera;
@@ -17,6 +18,8 @@ public class GizmoSystem
 	private SceneObject _targetObject;
 	private bool _isVisible = true;
 
+	private bool _showDebug = true;
+
 	public enum GizmoType
 	{
 		Translate,
@@ -33,6 +36,8 @@ public class GizmoSystem
 		_gizmos = new Dictionary<GizmoType, IGizmo>();
 
 		InitializeGizmos();
+
+		SetCurrentGizmo(GizmoType.Scale);
 	}
 
 	public void SetCurrentGizmo(GizmoType type)
@@ -92,5 +97,26 @@ public class GizmoSystem
 		{
 			_currentGizmo = gizmo;
 		}
+	}
+
+	public void DrawDebugInfo()
+	{
+		if (!_showDebug) return;
+
+		if (ImGui.Begin("Gizmo Debug"))
+		{
+			ImGui.Text($"Current Gizmo: {_currentGizmo?.GetType().Name ?? "None"}");
+			ImGui.Text($"Target Object: {_targetObject?.Name ?? "None"}");
+
+			if (_targetObject != null)
+			{
+				var transform = _targetObject.Transform;
+				ImGui.Text("Transform before Gizmo operation:");
+				ImGui.Text($"Position: {transform.Position}");
+				ImGui.Text($"Rotation: {transform.Rotation}");
+				ImGui.Text($"Scale: {transform.Scale}");
+			}
+		}
+		ImGui.End();
 	}
 }

@@ -12,10 +12,99 @@ namespace MiniSceneEditor;
 
 public partial class Editor
 {
+	private bool _showInspector = true;
+	private bool _showHierarchy = true;
+
 	private static void ComponentRegister()
 	{
 		ComponentEditorFactory.RegisterEditor<TransformComponent, TransformComponentEditor>();
+		ComponentEditorFactory.RegisterEditor<MeshComponent, MeshComponentEditor>();
 		//ComponentEditorFactory.RegisterEditor<CameraComponent, CameraComponentEditor>();
+	}
+
+	private void DrawWindowWithCloseButton(string title, Action drawContent, ref bool isOpen)
+	{
+		// Додаємо флаг для кнопки закриття
+		ImGuiWindowFlags flags = ImGuiWindowFlags.None;
+
+		if (ImGui.Begin(title, ref isOpen, flags))
+		{
+			drawContent();
+		}
+		ImGui.End();
+	}
+
+	private void DrawGUI(GameTime gameTime)
+	{
+
+		_imGuiRenderer.BeginLayout(gameTime);
+
+		DrawMainMenu();
+		if (_showInspector)
+		{
+			DrawWindowWithCloseButton("Inspector", () =>
+			{
+				DrawInspector();
+			}, ref _showInspector);
+		}
+
+		// Вікно ієрархії
+		if (_showHierarchy)
+		{
+			DrawWindowWithCloseButton("Scene Hierarchy", () =>
+			{
+				DrawSceneHierarchy();
+				//foreach (var obj in _currentScene.GetRootObjects())
+				//{
+				//	DrawHierarchyNode(obj);
+				//}
+			}, ref _showHierarchy);
+		}
+
+		DrawEditorCameraSettings();
+
+
+		
+
+		// Відображення властивостей вибраного об'єкта
+		
+
+		_snapSystem.DrawGUI();
+
+		if (Keyboard.GetState().IsKeyDown(Keys.F3)) // або інша клавіша для debug режиму
+		{
+			_selectManager.DrawDebugInfo();
+			_gizmoSystem.DrawDebugInfo();
+		}
+
+		_imGuiRenderer.EndLayout();
+	}
+
+	private void DrawMainMenu()
+	{
+		if (ImGui.BeginMainMenuBar())
+		{
+			if (ImGui.BeginMenu("Create"))
+			{
+				if (ImGui.MenuItem("Box"))
+				{
+					CreateBoxObject();
+				}
+				ImGui.EndMenu();
+			}
+
+			if (ImGui.BeginMenu("Window"))
+			{
+				if (ImGui.MenuItem("Inspector", "", _showInspector))
+					_showInspector = !_showInspector;
+
+				if (ImGui.MenuItem("Scene Hierarchy", "", _showHierarchy))
+					_showHierarchy = !_showHierarchy;
+
+				ImGui.EndMenu();
+			}
+			ImGui.EndMainMenuBar();
+		}
 	}
 
 	private void DrawSceneHierarchy()
@@ -56,7 +145,7 @@ public partial class Editor
 		if (ImGui.IsItemClicked())
 		{
 			_selectManager.HandleSceneHierarchySelection(obj,
-				ImGui.GetIO().KeyCtrl);
+				ImGui.GetIO().KeyAlt);
 		}
 
 		if (ImGui.BeginPopupContextItem())
@@ -98,26 +187,7 @@ public partial class Editor
 
 
 
-	private void DrawGUI(GameTime gameTime)
-	{
-
-		_imGuiRenderer.BeginLayout(gameTime);
-
-		DrawEditorCameraSettings();
-
-
-		DrawSceneHierarchy();
-
-		// Відображення властивостей вибраного об'єкта
-		if (_selectedObject != null)
-		{
-			//DrawObjectProperties();
-		}
-
-		_snapSystem.DrawGUI();
-
-		_imGuiRenderer.EndLayout();
-	}
+	
 
 	private void DrawEmpty()
 	{
@@ -198,13 +268,13 @@ public partial class Editor
 	}
 
 	// У вікні інспектора
-	private void DrawInspector(SceneObject selectedObject)
+	private void DrawInspector()
 	{
-		if (selectedObject == null) return;
+		if (_selectManager.SelectedSceneObject == null) return;
 
 		ImGui.Begin("Inspector");
 
-		foreach (var component in selectedObject.Components)
+		foreach (var component in _selectManager.SelectedSceneObject.Components)
 		{
 			if (ImGui.CollapsingHeader(component.GetType().Name))
 			{
@@ -248,7 +318,7 @@ public partial class Editor
 								 ImGuiTreeNodeFlags.SpanAvailWidth;
 
 		// Додаємо прапорець Selected, якщо об'єкт вибраний
-		if (obj == _selectedObject)
+		if (obj == _selectManager.SelectedSceneObject)
 			flags |= ImGuiTreeNodeFlags.Selected;
 
 		// Якщо об'єкт не має дочірніх елементів, робимо його листком
@@ -267,7 +337,7 @@ public partial class Editor
 		// Обробка подвійного кліку
 		if (ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(0))
 		{
-			_selectedObject = obj;
+			_selectManager.SelectObject(obj);
 			var keyboard = Keyboard.GetState();
 			bool withFocus = keyboard.IsKeyDown(Keys.LeftShift) ||
 							keyboard.IsKeyDown(Keys.RightShift);
@@ -285,7 +355,7 @@ public partial class Editor
 		// Обробка кліку на об'єкті
 		if (ImGui.IsItemClicked())
 		{
-			_selectedObject = obj;
+			_selectManager.SelectObject(obj);
 		}
 
 		// Контекстне меню для об'єкта (правий клік)
@@ -302,8 +372,8 @@ public partial class Editor
 				obj != _currentScene.MainCamera &&
 				obj != _currentScene.DirectionalLight)
 			{
-				if (_selectedObject == obj)
-					_selectedObject = null;
+				if (_selectManager.SelectedSceneObject == obj)
+					_selectManager.SelectObject(null);
 
 				_currentScene.UnregisterObject(obj.Id);
 				ImGui.EndPopup();
