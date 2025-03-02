@@ -37,7 +37,7 @@ public class GizmoSystem
 
 		InitializeGizmos();
 
-		SetCurrentGizmo(GizmoType.Scale);
+		SetCurrentGizmo(GizmoType.Translate);
 	}
 
 	public void SetCurrentGizmo(GizmoType type)
@@ -89,6 +89,7 @@ public class GizmoSystem
 			_currentGizmo.HandleInput(inputState, camera, _targetObject.Transform);
 		}
 	}
+
 
 	// Метод для зміни типу гізмо
 	public void SetGizmoType(GizmoType type)

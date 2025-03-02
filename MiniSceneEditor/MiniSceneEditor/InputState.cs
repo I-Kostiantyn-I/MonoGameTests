@@ -25,8 +25,20 @@ public class InputState
 		CurrentKeyboard = keyboard;
 	}
 
+	// Перевірка натискання (кнопка була відпущена, стала натиснутою)
 	public bool IsMouseButtonPressed(ButtonState button) =>
-		CurrentMouse.LeftButton == button && PreviousMouse.LeftButton != button;
+		CurrentMouse.LeftButton == ButtonState.Pressed &&
+		PreviousMouse.LeftButton == ButtonState.Released;
+
+	// Перевірка відпускання (кнопка була натиснута, стала відпущеною)
+	public bool IsMouseButtonReleased(ButtonState button) =>
+		CurrentMouse.LeftButton == ButtonState.Released &&
+		PreviousMouse.LeftButton == ButtonState.Pressed;
+
+	// Перевірка, чи утримується кнопка
+	public bool IsMouseButtonDown(ButtonState button) =>
+		CurrentMouse.LeftButton == ButtonState.Pressed &&
+		PreviousMouse.LeftButton == ButtonState.Pressed;
 
 	public bool IsKeyPressed(Keys key) =>
 		CurrentKeyboard.IsKeyDown(key);

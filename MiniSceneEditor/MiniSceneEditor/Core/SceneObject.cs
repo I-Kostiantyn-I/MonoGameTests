@@ -37,6 +37,8 @@ public class SceneObject : IDisposable //DrawableGameComponent
 		Name = name;
 		Transform = new TransformComponent();
 		Children = new List<SceneObject>();
+
+		_components.Add(typeof(TransformComponent), Transform);
 	}
 
 	// Робота з компонентами

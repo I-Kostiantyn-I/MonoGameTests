@@ -10,10 +10,10 @@ namespace MiniSceneEditor.Commands;
 
 public class TransformCommand : ICommand
 {
-	protected readonly TransformComponent Transform;
-	protected readonly Vector3 OldValue;
-	protected readonly Vector3 NewValue;
-	protected readonly TransformationType Type;
+	private readonly TransformComponent _transform;
+	private readonly Vector3 _oldValue;
+	private readonly Vector3 _newValue;
+	private readonly TransformationType _type;
 
 	public enum TransformationType
 	{
@@ -24,34 +24,38 @@ public class TransformCommand : ICommand
 
 	public TransformCommand(TransformComponent transform, Vector3 oldValue, Vector3 newValue, TransformationType type)
 	{
-		Transform = transform;
-		OldValue = oldValue;
-		NewValue = newValue;
-		Type = type;
+		_transform = transform;
+		_oldValue = oldValue;
+		_newValue = newValue;
+		_type = type;
+
+		//_log.Log($"Created transform command: {type}, From: {oldValue}, To: {newValue}");
 	}
 
-	public virtual void Execute()
+	public void Execute()
 	{
-		ApplyValue(NewValue);
+		ApplyTransform(_newValue);
+		//_log.Log($"Executed transform: {_type}, Value: {_newValue}");
 	}
 
-	public virtual void Undo()
+	public void Undo()
 	{
-		ApplyValue(OldValue);
+		ApplyTransform(_oldValue);
+		//_log.Log($"Undone transform: {_type}, Value: {_oldValue}");
 	}
 
-	protected void ApplyValue(Vector3 value)
+	private void ApplyTransform(Vector3 value)
 	{
-		switch (Type)
+		switch (_type)
 		{
 			case TransformationType.Position:
-				Transform.Position = value;
+				_transform.Position = value;
 				break;
 			case TransformationType.Rotation:
-				Transform.Rotation = value;
+				_transform.Rotation = value;
 				break;
 			case TransformationType.Scale:
-				Transform.Scale = value;
+				_transform.Scale = value;
 				break;
 		}
 	}

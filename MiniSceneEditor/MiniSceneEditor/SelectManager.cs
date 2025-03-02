@@ -19,7 +19,7 @@ public class SelectManager
 	//public event Action<List<SceneObject>> OnMultiSelectionChanged;
 	public event Action<SceneObject> OnSingleSelectionChanged;
 	public IReadOnlyList<SceneObject> SelectedObjects => _selectedObjects;
-	public bool HasSelection => _selectedObjects.Count > 0;
+	public bool HasSelection => _selectedObjects.Count > 0 || _selectedObject != null;
 
 	public SceneObject SelectedSceneObject => _selectedObject;
 

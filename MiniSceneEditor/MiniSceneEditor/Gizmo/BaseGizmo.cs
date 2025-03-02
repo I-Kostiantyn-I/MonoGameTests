@@ -22,6 +22,10 @@ public abstract class BaseGizmo : IGizmo
 	protected Vector3 TransformStart;
 	protected bool IsDragging;
 
+	protected readonly EditorLogger _log;
+
+	protected Vector3 OriginalValue;
+
 	protected readonly SnapSystem SnapSystem;
 
 	protected BaseGizmo(GraphicsDevice graphicsDevice, CommandManager commandManager, SnapSystem snapSystem)
@@ -29,6 +33,8 @@ public abstract class BaseGizmo : IGizmo
 		GraphicsDevice = graphicsDevice;
 		CommandManager = commandManager;
 		SnapSystem = snapSystem;
+
+		_log = new EditorLogger(nameof(BaseGizmo));
 	}
 
 	public abstract void Draw(BasicEffect effect, TransformComponent transform);
@@ -49,6 +55,41 @@ public abstract class BaseGizmo : IGizmo
 
 		return RayLineIntersection(mouseRay, lineStart, lineEnd, out distance);
 	}
+
+	protected void BeginDrag(TransformComponent transform, TransformCommand.TransformationType type)
+	{
+		IsDragging = true;
+		OriginalValue = GetTransformValue(transform, type);
+		_log.Log($"Started dragging: {type}, Original value: {OriginalValue}");
+	}
+
+	protected void EndDrag(TransformComponent transform, TransformCommand.TransformationType type)
+	{
+		if (IsDragging)
+		{
+			Vector3 newValue = GetTransformValue(transform, type);
+			if (newValue != OriginalValue)
+			{
+				var command = new TransformCommand(transform, OriginalValue, newValue, type);
+				CommandManager.ExecuteCommand(command);
+				_log.Log($"Ended dragging: {type}, New value: {newValue}");
+			}
+		}
+		IsDragging = false;
+		ActiveAxis = -1;
+	}
+
+	protected Vector3 GetTransformValue(TransformComponent transform, TransformCommand.TransformationType type)
+	{
+		return type switch
+		{
+			TransformCommand.TransformationType.Position => transform.Position,
+			TransformCommand.TransformationType.Rotation => transform.Rotation,
+			TransformCommand.TransformationType.Scale => transform.Scale,
+			_ => Vector3.Zero
+		};
+	}
+
 
 	protected Ray GetMouseRay(Vector2 mousePosition, CameraMatricesState camera)
 	{
