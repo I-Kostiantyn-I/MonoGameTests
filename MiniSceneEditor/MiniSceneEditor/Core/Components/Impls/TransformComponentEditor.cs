@@ -21,5 +21,11 @@ public class TransformComponentEditor : ComponentEditor<TransformComponent>
 		{
 			Component.Rotation = rotation.ToXNA();
 		}
+
+		var scale = Component.Scale.ToNumerics();
+		if (ImGui.DragFloat3("Scale", ref scale, 0.1f))
+		{
+			Component.Scale = scale.ToXNA();
+		}
 	}
 }

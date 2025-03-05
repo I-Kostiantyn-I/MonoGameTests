@@ -33,7 +33,7 @@ public class TranslationGizmo : BaseGizmo
 	public TranslationGizmo(GraphicsDevice graphicsDevice, CommandManager commandManager, SnapSystem snapSystem)
 		: base(graphicsDevice, commandManager, snapSystem)
 	{
-		_log = new EditorLogger(nameof(TranslationGizmo));
+		_log = new EditorLogger(nameof(TranslationGizmo), false);
 
 		_axisDirections = new[]
 		{

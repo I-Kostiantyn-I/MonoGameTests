@@ -37,7 +37,7 @@ public class GizmoSystem
 
 		InitializeGizmos();
 
-		SetCurrentGizmo(GizmoType.Translate);
+		SetCurrentGizmo(GizmoType.Rotate);
 	}
 
 	public void SetCurrentGizmo(GizmoType type)
