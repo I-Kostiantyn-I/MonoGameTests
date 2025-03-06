@@ -159,7 +159,7 @@ public partial class Editor : Game
 		// 2. Є вибраний об'єкт (перевіряємо через SelectManager)
 		if (_selectManager.HasSelection && inputState.CurrentMouse.RightButton != ButtonState.Pressed)
 		{
-			HandleGizmoInput(inputState);
+			//HandleGizmoInput(inputState);
 
 			if (_selectManager.SelectObject != null)
 			{
@@ -170,25 +170,25 @@ public partial class Editor : Game
 		base.Update(gameTime);
 	}
 
-	private void HandleGizmoInput(InputState inputState)
-	{
-		// Перемикання типів гізмо
-		if (inputState.CurrentKeyboard.IsKeyDown(Keys.W))
-		{
-			_gizmoSystem.SetGizmoType(GizmoType.Translate);
-			_log.Log("Switched to Translation Gizmo");
-		}
-		else if (inputState.CurrentKeyboard.IsKeyDown(Keys.E))
-		{
-			_gizmoSystem.SetGizmoType(GizmoType.Rotate);
-			_log.Log("Switched to Rotation Gizmo");
-		}
-		else if (inputState.CurrentKeyboard.IsKeyDown(Keys.R))
-		{
-			_gizmoSystem.SetGizmoType(GizmoType.Scale);
-			_log.Log("Switched to Scale Gizmo");
-		}
-	}
+	//private void HandleGizmoInput(InputState inputState)
+	//{
+	//	// Перемикання типів гізмо
+	//	if (inputState.CurrentKeyboard.IsKeyDown(Keys.W))
+	//	{
+	//		_gizmoSystem.SetGizmoType(GizmoType.Translate);
+	//		_log.Log("Switched to Translation Gizmo");
+	//	}
+	//	else if (inputState.CurrentKeyboard.IsKeyDown(Keys.E))
+	//	{
+	//		_gizmoSystem.SetGizmoType(GizmoType.Rotate);
+	//		_log.Log("Switched to Rotation Gizmo");
+	//	}
+	//	else if (inputState.CurrentKeyboard.IsKeyDown(Keys.R))
+	//	{
+	//		_gizmoSystem.SetGizmoType(GizmoType.Scale);
+	//		_log.Log("Switched to Scale Gizmo");
+	//	}
+	//}
 
 
 	private void UpdateGizmos(InputState inputState)

@@ -37,7 +37,7 @@ public class GizmoSystem
 
 		InitializeGizmos();
 
-		SetCurrentGizmo(GizmoType.Rotate);
+		SetCurrentGizmo(GizmoType.Scale);
 	}
 
 	public void SetCurrentGizmo(GizmoType type)
@@ -82,9 +82,9 @@ public class GizmoSystem
 		if (_currentGizmo != null)
 		{
 			// Перемикання режимів гізмо
-			if (inputState.IsKeyPressed(Keys.W)) SetCurrentGizmo(GizmoType.Translate);
-			if (inputState.IsKeyPressed(Keys.E)) SetCurrentGizmo(GizmoType.Rotate);
-			if (inputState.IsKeyPressed(Keys.R)) SetCurrentGizmo(GizmoType.Scale);
+			if (inputState.IsKeyPressed(Keys.T)) SetCurrentGizmo(GizmoType.Translate);
+			if (inputState.IsKeyPressed(Keys.R)) SetCurrentGizmo(GizmoType.Rotate);
+			if (inputState.IsKeyPressed(Keys.E)) SetCurrentGizmo(GizmoType.Scale);
 
 			_currentGizmo.HandleInput(inputState, camera, _targetObject.Transform);
 		}

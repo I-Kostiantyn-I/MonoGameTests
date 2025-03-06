@@ -24,13 +24,6 @@ public class ImGuiRenderer : IDisposable
 	private readonly Dictionary<Keys, int> _keyMap = new Dictionary<Keys, int>();
 	private KeyboardState _previousKeyboardState;
 
-	private struct VertexPositionColorTexture
-	{
-		public Vector3 Position;
-		public Color Color;
-		public Vector2 TextureCoordinate;
-	}
-
 	public ImGuiRenderer(Game game)
 	{
 		_game = game;

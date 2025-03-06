@@ -22,6 +22,20 @@ public abstract class BaseGizmo : IGizmo
 	protected Vector3 TransformStart;
 	protected bool IsDragging;
 
+	protected readonly Vector3[] AxisDirections = new[]
+	{
+		Vector3.Right,   // X axis
+        Vector3.Up,      // Y axis
+        Vector3.Forward  // Z axis
+    };
+
+	protected readonly Color[] AxisColors = new[]
+	{
+		Color.Red,    // X axis
+        Color.Green,  // Y axis
+        Color.Blue    // Z axis
+    };
+
 	protected readonly EditorLogger _log;
 
 	protected Vector3 OriginalValue;
@@ -34,7 +48,7 @@ public abstract class BaseGizmo : IGizmo
 		CommandManager = commandManager;
 		SnapSystem = snapSystem;
 
-		_log = new EditorLogger(nameof(BaseGizmo));
+		_log = new EditorLogger(nameof(BaseGizmo), false);
 	}
 
 	public abstract void Draw(BasicEffect effect, TransformComponent transform);

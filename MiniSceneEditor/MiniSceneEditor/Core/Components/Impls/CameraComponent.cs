@@ -20,7 +20,6 @@ public class CameraComponent : IComponent, IRenderable
 	private GraphicsDevice _graphicsDevice;
 	private BasicEffect _debugEffect;
 	private VertexBuffer _cameraVertexBuffer;
-	private float _visualSize = 0.5f; // Розмір візуального представлення камери
 	private bool _isInitialized;
 
 	public void SetGraphicsDevice(GraphicsDevice graphicsDevice)
