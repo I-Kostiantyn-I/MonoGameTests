@@ -9,7 +9,7 @@ using MiniSceneEditor.Core.Components.Impls;
 
 namespace Microsoft.Core;
 
-public class SceneObject : IDisposable //DrawableGameComponent
+public class SceneObject : IDisposable
 {
 	public uint Id { get; }
 	public string Name { get; set; }
@@ -157,24 +157,6 @@ public class SceneObject : IDisposable //DrawableGameComponent
 	{
 		return Vector3.Transform(Transform.Position, GetWorldMatrix());
 	}
-
-	/*public override void Draw(GameTime gameTime)
-    {
-        SpriteBatch spriteBatch = (SpriteBatch)Game.Services.GetService(typeof(SpriteBatch));
-        spriteBatch.Begin();
-        spriteBatch.Draw(Texture, Position, Color.White);
-        
-        // Додати візуальне позначення об'єкта якщо він вибран
-        if (IsSelected)
-        {
-            Rectangle bounds = new Rectangle((int)Position.X, (int)Position.Y, Texture.Width, Texture.Height);
-            spriteBatch.Draw(Game.Content.Load<Texture2D>("SelectionBox"), bounds, Color.Red * 0.5f);
-        }
-
-        spriteBatch.End();
-
-        base.Draw(gameTime);
-    }*/
 
 	// Очищення ресурсів
 	public void Dispose()

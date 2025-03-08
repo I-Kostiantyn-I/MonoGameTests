@@ -34,7 +34,7 @@ public class EditorCamera
 		_yaw = 0;
 		_pitch = 0;
 		_moveSpeed = 10.0f;
-		_log = new EditorLogger(nameof(EditorCamera));
+		_log = new EditorLogger(nameof(EditorCamera), false);
 	}
 
 	public Vector3 Position
@@ -100,23 +100,7 @@ public class EditorCamera
 
 		if (!withTransition)
 		{
-
 			_position = targetPosition - GetForwardVector() * 10f;
-
-			//// Відступаємо на 15 одиниць по Z від цілі
-			//_position = targetPosition + new Vector3(0, 0, 15);
-
-			//// Розраховуємо вектор напрямку до цілі
-			//Vector3 lookDir = targetPosition - _position;
-			//lookDir.Normalize();
-
-			//// Розраховуємо кути
-			//_yaw = 0;  // Оскільки ми дивимось прямо, кут повороту 0
-			//_pitch = -(float)Math.Asin(lookDir.Y); // Кут нахилу
-
-			//_log.Log($"New position: {_position}");
-			//_log.Log($"Look direction: {lookDir}");
-			//_log.Log($"Angles - Yaw: {MathHelper.ToDegrees(_yaw):F2}°, Pitch: {MathHelper.ToDegrees(_pitch):F2}°");
 		}
 	}
 
@@ -218,31 +202,6 @@ public class EditorCamera
 			   keyboard.IsKeyDown(Keys.Space) ||
 			   keyboard.IsKeyDown(Keys.LeftControl) ||
 			   mouse.RightButton == ButtonState.Pressed;
-	}
-
-	private void DrawCameraSettings()
-	{
-		if (ImGui.Begin("Camera Settings"))
-		{
-			float moveSpeed = _moveSpeed;
-			if (ImGui.DragFloat("Move Speed", ref moveSpeed, 0.01f, 0.01f, 1.0f))
-			{
-				//SetMoveSpeed(moveSpeed);
-			}
-
-			float rotationSpeed = _rotationSpeed;
-			if (ImGui.DragFloat("Rotation Speed", ref rotationSpeed, 0.001f, 0.001f, 0.1f))
-			{
-				//SetRotationSpeed(rotationSpeed);
-			}
-
-			float zoomSpeed = _zoomSpeed;
-			if (ImGui.DragFloat("Zoom Speed", ref zoomSpeed, 0.01f, 0.01f, 1.0f))
-			{
-				//SetZoomSpeed(zoomSpeed);
-			}
-		}
-		ImGui.End();
 	}
 
 	private void UpdateFocusing(float deltaTime)

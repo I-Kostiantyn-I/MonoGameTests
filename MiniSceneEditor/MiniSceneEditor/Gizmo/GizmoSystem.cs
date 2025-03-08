@@ -20,11 +20,14 @@ public class GizmoSystem
 
 	private bool _showDebug = true;
 
+	public IGizmo CurrentGizmo => _currentGizmo;
+
 	public enum GizmoType
 	{
 		Translate,
 		Rotate,
-		Scale
+		Scale,
+		MeshEdit
 	}
 
 	public GizmoSystem(GraphicsDevice graphicsDevice, CommandManager commandManager, SnapSystem snapSystem)
@@ -58,6 +61,7 @@ public class GizmoSystem
 		_gizmos[GizmoType.Translate] = new TranslationGizmo(_graphicsDevice, _commandManager, _snapSystem);
 		_gizmos[GizmoType.Rotate] = new RotationGizmo(_graphicsDevice, _commandManager, _snapSystem);
 		_gizmos[GizmoType.Scale] = new ScaleGizmo(_graphicsDevice, _commandManager, _snapSystem);
+		_gizmos[GizmoType.MeshEdit] = new MeshEditGizmo(_graphicsDevice, _commandManager, _snapSystem);
 	}
 
 	public void Draw(CameraMatricesState camera)

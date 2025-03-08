@@ -10,7 +10,6 @@ using MiniSceneEditor.Gizmo;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using static MiniSceneEditor.Gizmo.GizmoSystem;
 
 namespace MiniSceneEditor;
 
@@ -105,17 +104,6 @@ public partial class Editor : Game
 		   _snapSystem
 	   );
 
-
-		// Додаємо тестові об'єкти (потім це буде завантаження з файлу)
-		//var testObject = new SceneObject("Test Object");
-		//_currentScene.RegisterObject(testObject);
-
-		//var childObject = new SceneObject("Child Object");
-		//testObject.AddChild(childObject);
-
-		//var subChildObject = new SceneObject("Sub Child");
-		//childObject.AddChild(subChildObject);
-
 		CreateGrid();
 		CreateLightSource();
 
@@ -157,50 +145,12 @@ public partial class Editor : Game
 		// Оновлюємо гізмо тільки якщо:
 		// 1. Не натиснута права кнопка миші (щоб не заважати обертанню камери)
 		// 2. Є вибраний об'єкт (перевіряємо через SelectManager)
-		if (_selectManager.HasSelection && inputState.CurrentMouse.RightButton != ButtonState.Pressed)
+		if (_selectManager.HasSelection && inputState.CurrentMouse.RightButton != ButtonState.Pressed && _selectManager.SelectObject != null)
 		{
-			//HandleGizmoInput(inputState);
-
-			if (_selectManager.SelectObject != null)
-			{
-				_gizmoSystem.HandleInput(inputState, cameraState);
-			}
+			_gizmoSystem.HandleInput(inputState, cameraState);
 		}
 
 		base.Update(gameTime);
-	}
-
-	//private void HandleGizmoInput(InputState inputState)
-	//{
-	//	// Перемикання типів гізмо
-	//	if (inputState.CurrentKeyboard.IsKeyDown(Keys.W))
-	//	{
-	//		_gizmoSystem.SetGizmoType(GizmoType.Translate);
-	//		_log.Log("Switched to Translation Gizmo");
-	//	}
-	//	else if (inputState.CurrentKeyboard.IsKeyDown(Keys.E))
-	//	{
-	//		_gizmoSystem.SetGizmoType(GizmoType.Rotate);
-	//		_log.Log("Switched to Rotation Gizmo");
-	//	}
-	//	else if (inputState.CurrentKeyboard.IsKeyDown(Keys.R))
-	//	{
-	//		_gizmoSystem.SetGizmoType(GizmoType.Scale);
-	//		_log.Log("Switched to Scale Gizmo");
-	//	}
-	//}
-
-
-	private void UpdateGizmos(InputState inputState)
-	{
-		// todo: move to method
-		Matrix view = _camera.GetViewMatrix();
-		Matrix projection = _camera.GetProjectionMatrix();
-		var cameraState = new CameraMatricesState(view, projection);
-
-
-		// Оновлення гізмо з новим InputState
-		_gizmoSystem?.HandleInput(inputState, cameraState);
 	}
 
 	private void CreateBoxObject()
@@ -243,17 +193,11 @@ public partial class Editor : Game
 		_currentScene.Draw(view, projection);
 
 		_gizmoSystem.Draw(cameraState);
-		//foreach (var obj in _sceneObjects)
-		//{
-		//	obj.Render(view, projection);
-		//}
 
 		// тимчасово вимкнути
 		DrawGUI(gameTime);
 
 		_snapGrid.Draw(_camera.GetViewMatrix(), _camera.GetProjectionMatrix());
-
-		
 
 		base.Draw(gameTime);
 	}
@@ -292,37 +236,6 @@ public partial class Editor : Game
 		}
 
 		return false;
-	}
-
-	//private void HandleSelectionChanged(List<SceneObject> selectedObjects)
-	//{
-	//	System.Diagnostics.Debug.WriteLine($"Selection changed: {selectedObjects.Count} objects selected");
-
-	//	if (selectedObjects.Count > 0)
-	//	{
-	//		var selectedObject = selectedObjects[0];
-	//		System.Diagnostics.Debug.WriteLine($"Selected object: {selectedObject.Name}");
-	//		_gizmoSystem.SetTarget(selectedObject); // Тепер передаємо SceneObject замість Transform
-	//	}
-	//	else
-	//	{
-	//		System.Diagnostics.Debug.WriteLine("No objects selected");
-	//		_gizmoSystem.SetTarget(null);
-	//	}
-	//}
-
-	private void RemoveObjectFromParent(SceneObject obj)
-	{
-		// Видалення з кореневого рівня
-		if (_sceneObjects.Remove(obj))
-			return;
-
-		// Пошук і видалення з дочірніх елементів
-		foreach (var sceneObj in _sceneObjects)
-		{
-			if (RemoveObjectFromChildren(sceneObj, obj))
-				return;
-		}
 	}
 
 	private bool RemoveObjectFromChildren(SceneObject parent, SceneObject obj)

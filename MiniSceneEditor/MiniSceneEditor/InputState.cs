@@ -1,10 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MiniSceneEditor;
 
@@ -13,16 +8,18 @@ public class InputState
 	public MouseState CurrentMouse { get; }
 	public MouseState PreviousMouse { get; }
 	public KeyboardState CurrentKeyboard { get; }
+	public KeyboardState PreviousKeyboard { get; }
 
 	public Vector2 MousePosition => new Vector2(CurrentMouse.X, CurrentMouse.Y);
 	public Vector2 PreviousMousePosition => new Vector2(PreviousMouse.X, PreviousMouse.Y);
 	public Vector2 MouseDelta => MousePosition - PreviousMousePosition;
 
-	public InputState(MouseState currentMouse, MouseState previousMouse, KeyboardState keyboard)
+	public InputState(MouseState currentMouse, KeyboardState currenKeyboard)
 	{
+		PreviousMouse = CurrentMouse;
 		CurrentMouse = currentMouse;
-		PreviousMouse = previousMouse;
-		CurrentKeyboard = keyboard;
+		PreviousKeyboard = CurrentKeyboard;
+		CurrentKeyboard = currenKeyboard;
 	}
 
 	// Перевірка натискання (кнопка була відпущена, стала натиснутою)
@@ -40,14 +37,29 @@ public class InputState
 		CurrentMouse.LeftButton == ButtonState.Pressed &&
 		PreviousMouse.LeftButton == ButtonState.Pressed;
 
-	public bool IsKeyPressed(Keys key) =>
-		CurrentKeyboard.IsKeyDown(key);
-
 	public bool IsShiftDown() =>
 		CurrentKeyboard.IsKeyDown(Keys.LeftShift) || CurrentKeyboard.IsKeyDown(Keys.RightShift);
 
 	public bool IsControlDown() =>
 		CurrentKeyboard.IsKeyDown(Keys.LeftControl) || CurrentKeyboard.IsKeyDown(Keys.RightControl);
+
+	public bool IsAltDown() =>
+		CurrentKeyboard.IsKeyDown(Keys.LeftAlt) || CurrentKeyboard.IsKeyDown(Keys.RightAlt);
+
+	public bool IsKeyDown(Keys key)
+	{
+		return CurrentKeyboard.IsKeyDown(key);
+	}
+
+	public bool IsKeyPressed(Keys key)
+	{
+		return CurrentKeyboard.IsKeyDown(key) && !PreviousKeyboard.IsKeyDown(key);
+	}
+
+	public bool IsKeyReleased(Keys key)
+	{
+		return !CurrentKeyboard.IsKeyDown(key) && PreviousKeyboard.IsKeyDown(key);
+	}
 
 	// Методи для перевірки клавіш керування камерою
 	public bool IsForwardPressed() => CurrentKeyboard.IsKeyDown(Keys.W);

@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Input;
 using MiniSceneEditor.Commands;
 using MiniSceneEditor.Core.Components;
 using MiniSceneEditor.Core.Components.Impls;
+using MiniSceneEditor.Gizmo;
 using System;
 using System.Linq;
 
@@ -15,10 +16,18 @@ public partial class Editor
 	private bool _showInspector = true;
 	private bool _showHierarchy = true;
 
+	// Додаємо змінні для параметрів редагованого боксу
+	private Vector3 _editableBoxSize = new Vector3(2, 2, 2);
+	private int _editableBoxSegmentsX = 1;
+	private int _editableBoxSegmentsY = 1;
+	private int _editableBoxSegmentsZ = 1;
+	private bool _showEditableBoxDialog = false;
+
 	private static void ComponentRegister()
 	{
 		ComponentEditorFactory.RegisterEditor<TransformComponent, TransformComponentEditor>();
 		ComponentEditorFactory.RegisterEditor<MeshComponent, MeshComponentEditor>();
+		ComponentEditorFactory.RegisterEditor<EditableMeshComponent, EditableMeshComponentEditor>();
 		//ComponentEditorFactory.RegisterEditor<CameraComponent, CameraComponentEditor>();
 	}
 
@@ -48,6 +57,8 @@ public partial class Editor
 			}, ref _showInspector);
 		}
 
+		//DrawMeshEditTools();
+
 		// Вікно ієрархії
 		if (_showHierarchy)
 		{
@@ -63,12 +74,6 @@ public partial class Editor
 
 		DrawEditorCameraSettings();
 
-
-		
-
-		// Відображення властивостей вибраного об'єкта
-		
-
 		_snapSystem.DrawGUI();
 
 		if (Keyboard.GetState().IsKeyDown(Keys.F3)) // або інша клавіша для debug режиму
@@ -82,29 +87,219 @@ public partial class Editor
 
 	private void DrawMainMenu()
 	{
+		// Головне меню
 		if (ImGui.BeginMainMenuBar())
 		{
+			if (ImGui.BeginMenu("File"))
+			{
+				if (ImGui.MenuItem("New Scene"))
+				{
+					_currentScene = new Scene(GraphicsDevice);
+					_sceneName = "noname";
+				}
+
+				if (ImGui.MenuItem("Save Scene"))
+				{
+					// Код збереження сцени
+				}
+
+				if (ImGui.MenuItem("Load Scene"))
+				{
+					// Код завантаження сцени
+				}
+
+				if (ImGui.MenuItem("Exit"))
+				{
+					Exit();
+				}
+
+				ImGui.EndMenu();
+			}
+
 			if (ImGui.BeginMenu("Create"))
 			{
 				if (ImGui.MenuItem("Box"))
 				{
 					CreateBoxObject();
 				}
+
+				// Додаємо новий пункт меню для створення редагованого боксу
+				if (ImGui.MenuItem("Editable Box"))
+				{
+					ShowEditableBoxDialog();
+				}
+
 				ImGui.EndMenu();
 			}
 
-			if (ImGui.BeginMenu("Window"))
+			if (ImGui.BeginMenu("Edit"))
 			{
-				if (ImGui.MenuItem("Inspector", "", _showInspector))
-					_showInspector = !_showInspector;
+				//if (ImGui.MenuItem("Undo", "Ctrl+Z", false, _commandManager.CanUndo()))
+				//{
+				//	_commandManager.Undo();
+				//}
 
-				if (ImGui.MenuItem("Scene Hierarchy", "", _showHierarchy))
-					_showHierarchy = !_showHierarchy;
+				//if (ImGui.MenuItem("Redo", "Ctrl+Y", false, _commandManager.CanRedo()))
+				//{
+				//	_commandManager.Redo();
+				//}
+
+				ImGui.Separator();
+
+				// Додаємо підменю для режимів редагування меша
+				if (_selectManager.SelectObject != null && _selectManager.SelectedSceneObject.GetComponent<EditableMeshComponent>() != null)
+				{
+					var editableMesh = _selectManager.SelectedSceneObject.GetComponent<EditableMeshComponent>();
+
+					if (ImGui.BeginMenu("Edit Mode"))
+					{
+						if (ImGui.MenuItem("Vertex", null, editableMesh.CurrentEditMode == EditMode.Vertex))
+						{
+							editableMesh.CurrentEditMode = EditMode.Vertex;
+							// Очищаємо поточний вибір
+							editableMesh.SelectedVertices.Clear();
+							editableMesh.SelectedEdges.Clear();
+							editableMesh.SelectedFaces.Clear();
+						}
+
+						if (ImGui.MenuItem("Edge", null, editableMesh.CurrentEditMode == EditMode.Edge))
+						{
+							editableMesh.CurrentEditMode = EditMode.Edge;
+							// Очищаємо поточний вибір
+							editableMesh.SelectedVertices.Clear();
+							editableMesh.SelectedEdges.Clear();
+							editableMesh.SelectedFaces.Clear();
+						}
+
+						if (ImGui.MenuItem("Face", null, editableMesh.CurrentEditMode == EditMode.Face))
+						{
+							editableMesh.CurrentEditMode = EditMode.Face;
+							// Очищаємо поточний вибір
+							editableMesh.SelectedVertices.Clear();
+							editableMesh.SelectedEdges.Clear();
+							editableMesh.SelectedFaces.Clear();
+						}
+
+						ImGui.EndMenu();
+					}
+
+					ImGui.Separator();
+
+					// Додаємо операції для редагування меша
+					if (ImGui.MenuItem("Delete Selected", "Del"))
+					{
+						if (editableMesh != null)
+						{
+							switch (editableMesh.CurrentEditMode)
+							{
+								case EditMode.Vertex:
+									editableMesh.DeleteSelectedVertices();
+									break;
+								case EditMode.Edge:
+									editableMesh.DeleteSelectedEdges();
+									break;
+								case EditMode.Face:
+									editableMesh.DeleteSelectedFaces();
+									break;
+							}
+						}
+					}
+
+					if (ImGui.MenuItem("Extrude", "X", false, editableMesh.CurrentEditMode == EditMode.Face && editableMesh.SelectedFaces.Count > 0))
+					{
+						// Екструзія вибраних граней
+						if (editableMesh != null)
+						{
+							// Створюємо гізмо для редагування меша, якщо воно ще не створене
+							_gizmoSystem.SetCurrentGizmo(GizmoSystem.GizmoType.MeshEdit);
+							MeshEditGizmo meshGizmo = (MeshEditGizmo)_gizmoSystem.CurrentGizmo;
+							if (meshGizmo != null)
+							{
+								meshGizmo.ExtrudeSelected(0.5f);
+							}
+						}
+					}
+				}
 
 				ImGui.EndMenu();
 			}
+
 			ImGui.EndMainMenuBar();
 		}
+
+		// Відображення діалогу налаштування параметрів редагованого боксу
+		if (_showEditableBoxDialog)
+		{
+			ImGui.SetNextWindowSize(new System.Numerics.Vector2(300, 200), ImGuiCond.FirstUseEver);
+			if (ImGui.Begin("Editable Box Settings", ref _showEditableBoxDialog))
+			{
+				// Конвертуємо Vector3 в System.Numerics.Vector3 для ImGui
+				System.Numerics.Vector3 boxSize = new System.Numerics.Vector3(
+					_editableBoxSize.X,
+					_editableBoxSize.Y,
+					_editableBoxSize.Z
+				);
+
+				// Поля для розміру боксу
+				if (ImGui.DragFloat3("Size", ref boxSize, 0.1f, 0.1f, 10.0f))
+				{
+					_editableBoxSize = new Vector3(
+						boxSize.X,
+						boxSize.Y,
+						boxSize.Z
+					);
+				}
+
+				// Поля для кількості сегментів
+				ImGui.DragInt("Segments X", ref _editableBoxSegmentsX, 0.1f, 1, 10);
+				ImGui.DragInt("Segments Y", ref _editableBoxSegmentsY, 0.1f, 1, 10);
+				ImGui.DragInt("Segments Z", ref _editableBoxSegmentsZ, 0.1f, 1, 10);
+
+				ImGui.Separator();
+
+				// Кнопки для створення або скасування
+				if (ImGui.Button("Create"))
+				{
+					CreateEditableBoxObject();
+					_showEditableBoxDialog = false;
+				}
+
+				ImGui.SameLine();
+
+				if (ImGui.Button("Cancel"))
+				{
+					_showEditableBoxDialog = false;
+				}
+			}
+			ImGui.End();
+		}
+
+		// Інші елементи GUI...
+
+	
+		//if (ImGui.BeginMainMenuBar())
+		//{
+		//	if (ImGui.BeginMenu("Create"))
+		//	{
+		//		if (ImGui.MenuItem("Box"))
+		//		{
+		//			CreateBoxObject();
+		//		}
+		//		ImGui.EndMenu();
+		//	}
+
+		//	if (ImGui.BeginMenu("Window"))
+		//	{
+		//		if (ImGui.MenuItem("Inspector", "", _showInspector))
+		//			_showInspector = !_showInspector;
+
+		//		if (ImGui.MenuItem("Scene Hierarchy", "", _showHierarchy))
+		//			_showHierarchy = !_showHierarchy;
+
+		//		ImGui.EndMenu();
+		//	}
+		//	ImGui.EndMainMenuBar();
+		//}
 	}
 
 	private void DrawSceneHierarchy()
@@ -442,4 +637,213 @@ public partial class Editor
 		}
 		ImGui.End();
 	}
+
+	#region ProBuilder
+	// Додаємо метод для створення редагованого боксу
+	private void CreateEditableBoxObject()
+	{
+		_log.Log("Creating editable box object");
+
+		// Створюємо новий об'єкт сцени
+		var boxObject = new SceneObject($"EditableBox_{_currentScene.GetRootObjects().Count()}");
+		_log.Log($"Creating editable box object: {boxObject.Name}");
+
+		// Додаємо компонент EditableMeshComponent замість стандартного MeshComponent
+		var meshComponent = boxObject.AddComponent<EditableMeshComponent>();
+		_log.Log("EditableMeshComponent added");
+
+		meshComponent.SetGraphicsDevice(GraphicsDevice);
+		_log.Log("GraphicsDevice set");
+
+		// Генеруємо меш боксу з сегментами
+		GenerateEditableBoxMesh(meshComponent, _editableBoxSize, _editableBoxSegmentsX, _editableBoxSegmentsY, _editableBoxSegmentsZ);
+		_log.Log("Editable box mesh generated");
+
+		// Реєструємо об'єкт у сцені
+		_currentScene.RegisterObject(boxObject);
+		_log.Log("Object registered in scene");
+
+		// Вибираємо створений об'єкт
+		_selectManager.SelectObject(boxObject);
+		_log.Log("Object selected");
+
+		// Встановлюємо режим редагування вершин за замовчуванням
+		if (meshComponent is EditableMeshComponent editableMesh)
+		{
+			editableMesh.CurrentEditMode = EditMode.Vertex;
+			_log.Log("Edit mode set to Vertex");
+		}
+	}
+
+	// Метод для генерації меша боксу з сегментами
+	private void GenerateEditableBoxMesh(EditableMeshComponent meshComponent, Vector3 size, int segmentsX, int segmentsY, int segmentsZ)
+	{
+		// Очищаємо попередні дані меша
+		meshComponent.Vertices.Clear();
+		meshComponent.Indices.Clear();
+
+		// Обчислюємо розмір одного сегмента
+		float segmentWidth = size.X / segmentsX;
+		float segmentHeight = size.Y / segmentsY;
+		float segmentDepth = size.Z / segmentsZ;
+
+		// Створюємо вершини
+		for (int y = 0; y <= segmentsY; y++)
+		{
+			for (int z = 0; z <= segmentsZ; z++)
+			{
+				for (int x = 0; x <= segmentsX; x++)
+				{
+					// Обчислюємо позицію вершини
+					float xPos = -size.X / 2 + x * segmentWidth;
+					float yPos = -size.Y / 2 + y * segmentHeight;
+					float zPos = -size.Z / 2 + z * segmentDepth;
+
+					meshComponent.AddVertex(new Vector3(xPos, yPos, zPos));
+				}
+			}
+		}
+
+		// Кількість вершин у одному ряду по X
+		int xVertCount = segmentsX + 1;
+		// Кількість вершин у одному шарі (X-Z площина)
+		int layerVertCount = (segmentsX + 1) * (segmentsZ + 1);
+
+		// Створюємо індекси для трикутників
+		// Проходимо по всіх сегментах
+		for (int y = 0; y < segmentsY; y++)
+		{
+			for (int z = 0; z < segmentsZ; z++)
+			{
+				for (int x = 0; x < segmentsX; x++)
+				{
+					// Індекси вершин поточного квадрата
+					int i0 = y * layerVertCount + z * xVertCount + x;
+					int i1 = i0 + 1;
+					int i2 = i0 + xVertCount;
+					int i3 = i2 + 1;
+					int i4 = i0 + layerVertCount;
+					int i5 = i4 + 1;
+					int i6 = i4 + xVertCount;
+					int i7 = i6 + 1;
+
+					// Верхня грань (Y+)
+					if (y == segmentsY - 1)
+					{
+						meshComponent.AddTriangle(i4, i5, i7);
+						meshComponent.AddTriangle(i4, i7, i6);
+					}
+
+					// Нижня грань (Y-)
+					if (y == 0)
+					{
+						meshComponent.AddTriangle(i0, i2, i1);
+						meshComponent.AddTriangle(i1, i2, i3);
+					}
+
+					// Передня грань (Z+)
+					if (z == segmentsZ - 1)
+					{
+						meshComponent.AddTriangle(i2, i6, i3);
+						meshComponent.AddTriangle(i3, i6, i7);
+					}
+
+					// Задня грань (Z-)
+					if (z == 0)
+					{
+						meshComponent.AddTriangle(i0, i1, i4);
+						meshComponent.AddTriangle(i1, i5, i4);
+					}
+
+					// Права грань (X+)
+					if (x == segmentsX - 1)
+					{
+						meshComponent.AddTriangle(i1, i3, i5);
+						meshComponent.AddTriangle(i3, i7, i5);
+					}
+
+					// Ліва грань (X-)
+					if (x == 0)
+					{
+						meshComponent.AddTriangle(i0, i4, i2);
+						meshComponent.AddTriangle(i2, i4, i6);
+					}
+				}
+			}
+		}
+	}
+
+	// Додаємо метод для відображення діалогу налаштування параметрів боксу
+	private void ShowEditableBoxDialog()
+	{
+		_showEditableBoxDialog = true;
+	}
+	#endregion
+
+
+	//private void DrawMeshEditTools()
+	//{
+	//	if (_selectManager.SelectedSceneObject != null &&
+	//		_selectManager.SelectedSceneObject.HasComponent<EditableMeshComponent>())
+	//	{
+	//		var meshComponent = _selectManager.SelectedSceneObject.GetComponent<EditableMeshComponent>();
+
+	//		ImGui.Begin("Mesh Edit Tools");
+
+	//		// Режими редагування
+	//		ImGui.SameLine();
+	//		if (ImGui.Button("Vertex Mode"))
+	//			meshComponent.CurrentEditMode = EditMode.Vertex;
+
+	//		ImGui.SameLine();
+	//		if (ImGui.Button("Edge Mode"))
+	//			meshComponent.CurrentEditMode = EditMode.Edge;
+
+	//		ImGui.SameLine();
+	//		if (ImGui.Button("Face Mode"))
+	//			meshComponent.CurrentEditMode = EditMode.Face;
+
+	//		// Інструменти залежно від режиму
+	//		switch (meshComponent.CurrentEditMode)
+	//		{
+	//			case EditMode.Vertex:
+	//				if (ImGui.Button("Create Vertex"))
+	//				{
+	//					// Логіка створення вершини
+	//				}
+	//				ImGui.SameLine();
+	//				if (ImGui.Button("Merge Vertices"))
+	//				{
+	//					// Логіка об'єднання вершин
+	//				}
+	//				break;
+
+	//			case EditMode.Edge:
+	//				if (ImGui.Button("Bevel"))
+	//				{
+	//					// Логіка скошення ребра
+	//				}
+	//				ImGui.SameLine();
+	//				if (ImGui.Button("Subdivide"))
+	//				{
+	//					// Логіка поділу ребра
+	//				}
+	//				break;
+
+	//			case EditMode.Face:
+	//				if (ImGui.Button("Extrude"))
+	//				{
+	//					// Логіка витягування грані
+	//				}
+	//				ImGui.SameLine();
+	//				if (ImGui.Button("Inset"))
+	//				{
+	//					// Логіка вставки грані
+	//				}
+	//				break;
+	//		}
+
+	//		ImGui.End();
+	//	}
+	//}
 }

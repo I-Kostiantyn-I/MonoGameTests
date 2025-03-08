@@ -134,7 +134,7 @@ public class MeshComponent : Abstractions.IComponent, IRenderable
 		_graphicsDevice.RasterizerState = originalRasterizerState;
 	}
 
-	private void RebuildMesh()
+	public virtual void RebuildMesh()
 	{
 		if (_graphicsDevice == null)
 		{

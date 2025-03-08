@@ -28,16 +28,6 @@ public static class VectorExtensions
 		);
 	}
 
-
-	//public static Vector3 Multiply(this float value, Vector3 vector)
-	//{
-	//	return new Vector3(
-	//		vector.X * value,
-	//		vector.Y * value,
-	//		vector.Z * value
-	//	);
-	//}
-
 	public static Vector3 Divide(this Vector3 vector, float value)
 	{
 		return new Vector3(

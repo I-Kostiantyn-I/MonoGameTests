@@ -8,6 +8,7 @@ using ImGuiNET;
 using System;
 using MiniSceneEditor.Camera;
 using System.Linq;
+using MiniSceneEditor.Core.Components.Impls;
 
 public class SelectManager
 {
@@ -23,9 +24,35 @@ public class SelectManager
 
 	public SceneObject SelectedSceneObject => _selectedObject;
 
+	// Додаємо підтримку вибору елементів меша
+	private EditableMeshComponent _currentEditableMesh;
+
 	public SelectManager(Scene scene)
 	{
 		_scene = scene;
+	}
+
+	public void HandleMeshElementSelection(Ray ray)
+	{
+		if (_selectedObject != null && _selectedObject.HasComponent<EditableMeshComponent>())
+		{
+			var meshComponent = _selectedObject.GetComponent<EditableMeshComponent>();
+			_currentEditableMesh = meshComponent;
+
+			// Далі делегуємо вибір елементів до компонента меша
+			switch (meshComponent.CurrentEditMode)
+			{
+				case EditMode.Vertex:
+					// Логіка вибору вершин
+					break;
+				case EditMode.Edge:
+					// Логіка вибору ребер
+					break;
+				case EditMode.Face:
+					// Логіка вибору граней
+					break;
+			}
+		}
 	}
 
 	private void SelectObject(SceneObject obj, bool addToSelection = false)
@@ -116,22 +143,6 @@ public class SelectManager
 		}
 	}
 
-	//public void Update(InputState input, CameraMatricesState camera)
-	//{
-	//	if (ImGui.GetIO().WantCaptureMouse)
-	//		return;
-
-	//	// Оновлення наведення
-	//	UpdateHovering(input, camera);
-
-	//	// Обробка кліку
-	//	if (input.IsMouseButtonPressed(ButtonState.Pressed))
-	//	{
-	//		bool isMultiSelect = input.IsControlDown() || input.IsShiftDown();
-	//		SelectObject(_hoveredObject, isMultiSelect);
-	//	}
-	//}
-
 	// Отримати перший вибраний об'єкт (активний)
 	public SceneObject GetActiveObject()
 	{
@@ -162,13 +173,6 @@ public class SelectManager
 			}
 		}
 		ImGui.End();
-	}
-
-
-	private void UpdateHovering(InputState input, CameraMatricesState camera)
-	{
-		Ray ray = CreatePickingRay(input.MousePosition, camera);
-		_hoveredObject = FindNearestObject(ray);
 	}
 
 	private Ray CreatePickingRay(Vector2 mousePosition, CameraMatricesState camera)
