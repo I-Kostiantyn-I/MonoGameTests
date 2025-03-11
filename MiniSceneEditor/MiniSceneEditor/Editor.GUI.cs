@@ -1,4 +1,5 @@
-﻿using ImGuiNET;
+﻿using BepuPhysics;
+using ImGuiNET;
 using Microsoft.Core;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
@@ -28,6 +29,8 @@ public partial class Editor
 		ComponentEditorFactory.RegisterEditor<TransformComponent, TransformComponentEditor>();
 		ComponentEditorFactory.RegisterEditor<MeshComponent, MeshComponentEditor>();
 		ComponentEditorFactory.RegisterEditor<EditableMeshComponent, EditableMeshComponentEditor>();
+		ComponentEditorFactory.RegisterEditor<ColliderComponent, ColliderComponentEditor>();
+		ComponentEditorFactory.RegisterEditor<RigidbodyComponent, RigidbodyComponentEditor>();
 		//ComponentEditorFactory.RegisterEditor<CameraComponent, CameraComponentEditor>();
 	}
 
@@ -300,6 +303,43 @@ public partial class Editor
 		//	}
 		//	ImGui.EndMainMenuBar();
 		//}
+	}
+
+	// Метод для додавання керування фізикою в меню
+	private void DrawPhysicsMenu()
+	{
+		if (ImGui.BeginMenu("Physics"))
+		{
+			if (ImGui.MenuItem("Enable Physics", "", _physicsEnabled))
+			{
+				_physicsEnabled = !_physicsEnabled;
+				_physicsSystem.SetPaused(!_physicsEnabled);
+			}
+
+			if (ImGui.MenuItem("Reset Physics"))
+			{
+				_physicsSystem.Reset();
+			}
+
+			if (ImGui.BeginMenu("Settings"))
+			{
+				var gravity = _physicsSystem.Gravity;
+				if (ImGui.DragFloat3("Gravity", ref gravity, 0.1f))
+				{
+					_physicsSystem.Gravity = gravity;
+				}
+
+				var timeStep = _physicsSystem.FixedTimeStep;
+				if (ImGui.DragFloat("Time Step", ref timeStep, 0.001f, 0.001f, 0.1f))
+				{
+					_physicsSystem.FixedTimeStep = timeStep;
+				}
+
+				ImGui.EndMenu();
+			}
+
+			ImGui.EndMenu();
+		}
 	}
 
 	private void DrawSceneHierarchy()

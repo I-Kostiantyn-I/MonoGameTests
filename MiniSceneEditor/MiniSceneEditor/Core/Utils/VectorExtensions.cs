@@ -10,6 +10,11 @@ public static class VectorExtensions
 		return new Vector3(vector.X, vector.Y, vector.Z);
 	}
 
+	public static Quaternion ToXNA(this System.Numerics.Quaternion quaternion)
+	{
+		return new Quaternion(quaternion.X, quaternion.Y, quaternion.Z, quaternion.W);
+	}
+
 	public static Vector3 Multiply(this Vector3 vector, float value)
 	{
 		return new Vector3(

@@ -7,6 +7,7 @@ using MiniSceneEditor.Camera;
 using MiniSceneEditor.Commands;
 using MiniSceneEditor.Core.Components.Impls;
 using MiniSceneEditor.Gizmo;
+using MiniSceneEditor.Physics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -49,6 +50,9 @@ public partial class Editor : Game
 
 	private SelectManager _selectManager;
 	private GizmoSystem _gizmoSystem;
+
+	private PhysicsSystem _physicsSystem;
+	private bool _physicsEnabled = false;
 
 	private readonly EditorLogger _log;
 
@@ -95,7 +99,7 @@ public partial class Editor : Game
 		_camera = new EditorCamera(GraphicsDevice);
 
 		_currentScene = new Scene(GraphicsDevice);
-
+		_physicsSystem = new PhysicsSystem(_currentScene);
 		_selectManager = new SelectManager(_currentScene);
 		_selectManager.OnSingleSelectionChanged += HandleSelectionChanged;
 		_gizmoSystem = new GizmoSystem(
@@ -149,6 +153,11 @@ public partial class Editor : Game
 		{
 			_gizmoSystem.HandleInput(inputState, cameraState);
 		}
+
+		//if (_physicsEnabled)
+		//{
+		//	_physicsSystem.Update(gameTime);
+		//}
 
 		base.Update(gameTime);
 	}
@@ -204,10 +213,13 @@ public partial class Editor : Game
 
 	protected override void UnloadContent()
 	{
+		_physicsSystem.Dispose();
+
 		foreach (var obj in _sceneObjects)
 		{
 			obj.Dispose();
 		}
+
 		_imGuiRenderer.Dispose();
 		base.UnloadContent();
 	}

@@ -61,7 +61,7 @@ public class GizmoSystem
 		_gizmos[GizmoType.Translate] = new TranslationGizmo(_graphicsDevice, _commandManager, _snapSystem);
 		_gizmos[GizmoType.Rotate] = new RotationGizmo(_graphicsDevice, _commandManager, _snapSystem);
 		_gizmos[GizmoType.Scale] = new ScaleGizmo(_graphicsDevice, _commandManager, _snapSystem);
-		_gizmos[GizmoType.MeshEdit] = new MeshEditGizmo(_graphicsDevice, _commandManager, _snapSystem);
+		//_gizmos[GizmoType.MeshEdit] = new MeshEditGizmo(_graphicsDevice, _commandManager, _snapSystem);
 	}
 
 	public void Draw(CameraMatricesState camera)
@@ -91,16 +91,6 @@ public class GizmoSystem
 			if (inputState.IsKeyPressed(Keys.E)) SetCurrentGizmo(GizmoType.Scale);
 
 			_currentGizmo.HandleInput(inputState, camera, _targetObject.Transform);
-		}
-	}
-
-
-	// Метод для зміни типу гізмо
-	public void SetGizmoType(GizmoType type)
-	{
-		if (_gizmos.TryGetValue(type, out var gizmo))
-		{
-			_currentGizmo = gizmo;
 		}
 	}
 
