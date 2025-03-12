@@ -1,16 +1,11 @@
 ﻿using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MiniSceneEditor.Camera;
 
-public struct CameraMatricesState
+public readonly struct CameraMatricesState
 {
-	public Matrix ViewMatrix { get; set; }
-	public Matrix ProjectionMatrix { get; set; }
+	public Matrix ViewMatrix { get; }
+	public Matrix ProjectionMatrix { get; }
 
 	public CameraMatricesState(Matrix view, Matrix projection)
 	{

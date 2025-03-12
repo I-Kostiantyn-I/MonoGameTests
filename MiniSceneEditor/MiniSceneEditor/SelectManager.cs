@@ -106,7 +106,7 @@ public class SelectManager
 		// Обробляємо вибір тільки при кліку лівою кнопкою миші
 		if (InputManager.Instance.IsMouseButtonPressed(ButtonState.Pressed))
 		{
-			Ray ray = CreatePickingRay(InputManager.Instance.CurrentState.MousePosition, camera);
+			Ray ray = CreatePickingRay(InputManager.Instance.CurrentState.MousePosition, in camera);
 			var hitObject = FindNearestObject(ray);
 
 			// Змінюємо вибір тільки якщо попали в якийсь об'єкт
@@ -175,7 +175,7 @@ public class SelectManager
 		ImGui.End();
 	}
 
-	private Ray CreatePickingRay(Vector2 mousePosition, CameraMatricesState camera)
+	private Ray CreatePickingRay(in Vector2 mousePosition, in CameraMatricesState camera)
 	{
 		var viewport = _scene.GraphicsDevice.Viewport;
 		Vector3 nearPoint = viewport.Unproject(
