@@ -59,7 +59,7 @@ public class TranslationGizmo : BaseGizmo
 		}
 
 		// Початок перетягування
-		if (input.IsMouseButtonPressed(ButtonState.Pressed) && _hoveredAxis != -1)
+		if (InputManager.Instance.IsMouseButtonPressed(ButtonState.Pressed) && _hoveredAxis != -1)
 		{
 			ActiveAxis = _hoveredAxis;
 			BeginDrag(transform, TransformCommand.TransformationType.Position);
@@ -69,7 +69,7 @@ public class TranslationGizmo : BaseGizmo
 		}
 
 		// Перетягування
-		if (IsDragging && input.IsMouseButtonDown(ButtonState.Pressed))
+		if (IsDragging && InputManager.Instance.IsMouseButtonDown(ButtonState.Pressed))
 		{
 			Vector2 currentPos = input.MousePosition;
 			Vector2 delta = currentPos - new Vector2(DragStart.X, DragStart.Y);
@@ -100,7 +100,7 @@ public class TranslationGizmo : BaseGizmo
 		}
 
 		// Кінець перетягування
-		if (input.IsMouseButtonReleased(ButtonState.Released))
+		if (InputManager.Instance.IsMouseButtonReleased(ButtonState.Released))
 		{
 			if (IsDragging)
 			{

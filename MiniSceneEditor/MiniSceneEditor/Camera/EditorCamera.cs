@@ -104,7 +104,7 @@ public class EditorCamera
 		}
 	}
 
-	public void Update(GameTime gameTime, InputState inputState)
+	public void Update(GameTime gameTime)
 	{
 		float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
@@ -114,13 +114,14 @@ public class EditorCamera
 		}
 		else
 		{
-			HandleKeyboardInput(deltaTime, inputState.CurrentKeyboard);
-			HandleMouseInput(inputState.CurrentMouse);
+			HandleKeyboardInput(deltaTime);
+			HandleMouseInput();
 		}
 	}
 
-	private void HandleKeyboardInput(float deltaTime, KeyboardState keyboard)
+	private void HandleKeyboardInput(float deltaTime)
 	{
+		KeyboardState keyboard = InputManager.Instance.CurrentState.CurrentKeyboard;
 		// Базова швидкість руху (можливо, потрібно збільшити це значення)
 		var moveSpeed = _moveSpeed;// * 60.0f; // Множимо на 60 для компенсації deltaTime
 
@@ -158,8 +159,9 @@ public class EditorCamera
 		}
 	}
 
-	private void HandleMouseInput(MouseState mouse)
+	private void HandleMouseInput()
 	{
+		MouseState mouse = InputManager.Instance.CurrentState.CurrentMouse;
 		if (ImGui.GetIO().WantCaptureMouse)
 			return;
 

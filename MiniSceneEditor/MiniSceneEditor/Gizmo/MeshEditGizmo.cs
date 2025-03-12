@@ -305,24 +305,24 @@ public class MeshEditGizmo : IGizmo
 		bool handled = false;
 
 		// Перемикання режимів редагування
-		if (input.IsKeyPressed(Keys.D1))
+		if (InputManager.Instance.IsKeyPressed(Keys.D1))
 		{
 			SetEditMode(EditMode.Vertex);
 			handled = true;
 		}
-		else if (input.IsKeyPressed(Keys.D2))
+		else if (InputManager.Instance.IsKeyPressed(Keys.D2))
 		{
 			SetEditMode(EditMode.Edge);
 			handled = true;
 		}
-		else if (input.IsKeyPressed(Keys.D3))
+		else if (InputManager.Instance.IsKeyPressed(Keys.D3))
 		{
 			SetEditMode(EditMode.Face);
 			handled = true;
 		}
 
 		// Видалення вибраних елементів
-		if (input.IsKeyPressed(Keys.Delete))
+		if (InputManager.Instance.IsKeyPressed(Keys.Delete))
 		{
 			DeleteSelected();
 			handled = true;
@@ -331,32 +331,32 @@ public class MeshEditGizmo : IGizmo
 		// Переміщення вибраних елементів
 		Vector3 moveOffset = Vector3.Zero;
 
-		if (input.IsKeyDown(Keys.W))
+		if (InputManager.Instance.IsKeyDown(Keys.W))
 		{
 			moveOffset += Vector3.Up * 0.1f;
 			handled = true;
 		}
-		if (input.IsKeyDown(Keys.S))
+		if (InputManager.Instance.IsKeyDown(Keys.S))
 		{
 			moveOffset += Vector3.Down * 0.1f;
 			handled = true;
 		}
-		if (input.IsKeyDown(Keys.A))
+		if (InputManager.Instance.IsKeyDown(Keys.A))
 		{
 			moveOffset += Vector3.Left * 0.1f;
 			handled = true;
 		}
-		if (input.IsKeyDown(Keys.D))
+		if (InputManager.Instance.IsKeyDown(Keys.D))
 		{
 			moveOffset += Vector3.Right * 0.1f;
 			handled = true;
 		}
-		if (input.IsKeyDown(Keys.Q))
+		if (InputManager.Instance.IsKeyDown(Keys.Q))
 		{
 			moveOffset += Vector3.Backward * 0.1f;
 			handled = true;
 		}
-		if (input.IsKeyDown(Keys.E))
+		if (InputManager.Instance.IsKeyDown(Keys.E))
 		{
 			moveOffset += Vector3.Forward * 0.1f;
 			handled = true;
@@ -368,7 +368,7 @@ public class MeshEditGizmo : IGizmo
 		}
 
 		// Екструзія вибраних елементів
-		if (input.IsKeyPressed(Keys.X))
+		if (InputManager.Instance.IsKeyPressed(Keys.X))
 		{
 			ExtrudeSelected(0.5f);
 			handled = true;

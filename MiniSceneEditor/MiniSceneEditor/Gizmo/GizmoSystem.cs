@@ -81,17 +81,18 @@ public class GizmoSystem
 		_currentGizmo.Draw(_effect, _targetObject.Transform);
 	}
 
-	public void HandleInput(InputState inputState, CameraMatricesState camera)
+	public void HandleInput(CameraMatricesState camera)
 	{
-		if (_currentGizmo != null)
-		{
-			// Перемикання режимів гізмо
-			if (inputState.IsKeyPressed(Keys.T)) SetCurrentGizmo(GizmoType.Translate);
-			if (inputState.IsKeyPressed(Keys.R)) SetCurrentGizmo(GizmoType.Rotate);
-			if (inputState.IsKeyPressed(Keys.E)) SetCurrentGizmo(GizmoType.Scale);
+		if (_currentGizmo == null)
+			return;
 
-			_currentGizmo.HandleInput(inputState, camera, _targetObject.Transform);
-		}
+		InputState inputState = InputManager.Instance.CurrentState;
+		// Перемикання режимів гізмо
+		if (InputManager.Instance.IsKeyPressed(Keys.T)) SetCurrentGizmo(GizmoType.Translate);
+		if (InputManager.Instance.IsKeyPressed(Keys.R)) SetCurrentGizmo(GizmoType.Rotate);
+		if (InputManager.Instance.IsKeyPressed(Keys.E)) SetCurrentGizmo(GizmoType.Scale);
+
+		_currentGizmo.HandleInput(inputState, camera, _targetObject.Transform);
 	}
 
 	public void DrawDebugInfo()

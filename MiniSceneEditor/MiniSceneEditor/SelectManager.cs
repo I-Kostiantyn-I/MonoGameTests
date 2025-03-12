@@ -98,15 +98,15 @@ public class SelectManager
 		SelectObject(obj, isCtrlPressed);
 	}
 
-	public void Update(InputState input, CameraMatricesState camera)
+	public void Update(CameraMatricesState camera)
 	{
 		if (ImGui.GetIO().WantCaptureMouse)
 			return;
 
 		// Обробляємо вибір тільки при кліку лівою кнопкою миші
-		if (input.IsMouseButtonPressed(ButtonState.Pressed))
+		if (InputManager.Instance.IsMouseButtonPressed(ButtonState.Pressed))
 		{
-			Ray ray = CreatePickingRay(input.MousePosition, camera);
+			Ray ray = CreatePickingRay(InputManager.Instance.CurrentState.MousePosition, camera);
 			var hitObject = FindNearestObject(ray);
 
 			// Змінюємо вибір тільки якщо попали в якийсь об'єкт

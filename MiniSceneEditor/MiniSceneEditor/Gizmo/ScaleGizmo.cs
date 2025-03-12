@@ -6,6 +6,7 @@ using MiniSceneEditor.Commands;
 using MiniSceneEditor.Core.Components.Impls;
 using MiniSceneEditor.Core.Utils;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace MiniSceneEditor.Gizmo;
 
@@ -75,7 +76,7 @@ public class ScaleGizmo : BaseGizmo
 			}
 		}
 
-		if (input.IsMouseButtonPressed(ButtonState.Pressed) && _hoveredAxis != -1)
+		if (InputManager.Instance.IsMouseButtonPressed(ButtonState.Pressed) && _hoveredAxis != -1)
 		{
 			ActiveAxis = _hoveredAxis;
 			BeginDrag(transform, TransformCommand.TransformationType.Scale);
@@ -83,7 +84,9 @@ public class ScaleGizmo : BaseGizmo
 			return true;
 		}
 
-		if (IsDragging && input.IsMouseButtonDown(ButtonState.Pressed))
+		Debug.WriteLine("Is Pressed left mouse " + InputManager.Instance.IsMouseButtonDown(ButtonState.Pressed) + " IsDragging " + IsDragging);
+
+		if (IsDragging && InputManager.Instance.IsMouseButtonDown(ButtonState.Pressed))
 		{
 			Vector2 currentPos = input.MousePosition;
 			Vector2 delta = currentPos - new Vector2(DragStart.X, DragStart.Y);
@@ -110,7 +113,7 @@ public class ScaleGizmo : BaseGizmo
 			return true;
 		}
 
-		if (input.IsMouseButtonReleased(ButtonState.Released))
+		if (InputManager.Instance.IsMouseButtonReleased(ButtonState.Released))
 		{
 			if (IsDragging)
 			{

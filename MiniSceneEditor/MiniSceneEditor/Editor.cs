@@ -46,7 +46,7 @@ public partial class Editor : Game
 	private SnapSystem _snapSystem;
 	private SnapGrid _snapGrid;
 
-	private InputManager _inputManager;
+	//private InputManager _inputManager;
 
 	private SelectManager _selectManager;
 	private GizmoSystem _gizmoSystem;
@@ -93,7 +93,7 @@ public partial class Editor : Game
 
 	protected override void Initialize()
 	{
-		_inputManager = new InputManager();
+		//_inputManager = new InputManager();
 
 		_imGuiRenderer = new ImGuiRenderer(this);
 		_camera = new EditorCamera(GraphicsDevice);
@@ -133,25 +133,25 @@ public partial class Editor : Game
 
 	protected override void Update(GameTime gameTime)
 	{
-		_inputManager.Update();
-		var inputState = _inputManager.CurrentState;
+		InputManager.Instance.Update();
+		//var inputState = _inputManager.CurrentState;
 
 		// Завжди оновлюємо камеру
-		_camera.Update(gameTime, inputState);
+		_camera.Update(gameTime);
 
 		Matrix view = _camera.GetViewMatrix();
 		Matrix projection = _camera.GetProjectionMatrix();
 		var cameraState = new CameraMatricesState(view, projection);
 
 		// Оновлюємо SelectManager
-		_selectManager.Update(inputState, cameraState);
+		_selectManager.Update(cameraState);
 
 		// Оновлюємо гізмо тільки якщо:
 		// 1. Не натиснута права кнопка миші (щоб не заважати обертанню камери)
 		// 2. Є вибраний об'єкт (перевіряємо через SelectManager)
-		if (_selectManager.HasSelection && inputState.CurrentMouse.RightButton != ButtonState.Pressed && _selectManager.SelectObject != null)
+		if (_selectManager.HasSelection && InputManager.Instance.CurrentState.CurrentMouse.RightButton != ButtonState.Pressed && _selectManager.SelectObject != null)
 		{
-			_gizmoSystem.HandleInput(inputState, cameraState);
+			_gizmoSystem.HandleInput(cameraState);
 		}
 
 		//if (_physicsEnabled)
